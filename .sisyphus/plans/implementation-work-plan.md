@@ -549,7 +549,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
 
 ### Wave 3 — Extensions & Quality
 
-- [ ] 9. Optional PacketEvents adapter boundary
+- [x] 9. Optional PacketEvents adapter boundary
 
   **What to do**:
   - Define an isolated optional adapter layer for advanced visuals/per-player rewriting.
@@ -600,7 +600,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
     Evidence: .sisyphus/evidence/task-9-absent.log
   ```
 
-- [ ] 10. Documentation and public ergonomics
+- [x] 10. Documentation and public ergonomics
 
   **What to do**:
   - Write JavaDoc for all public API types.
@@ -651,7 +651,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
     Evidence: .sisyphus/evidence/task-10-javadoc.log
   ```
 
-- [ ] 11. Tests and hardening
+- [x] 11. Tests and hardening
 
   **What to do**:
   - Add unit and integration tests for registry, scaling, item mutation, and effect dispatch.

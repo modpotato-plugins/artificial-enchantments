@@ -1,6 +1,7 @@
 package io.artificial.enchantments.internal;
 
 import io.artificial.enchantments.api.scaling.LevelScaling;
+import io.artificial.enchantments.internal.scaling.ScalingUtils;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,9 +65,9 @@ class DamageModifierHelperTest {
     @ParameterizedTest
     @CsvSource({
         "10.0, 5.0, 15.0, 10.0",
-        "10.0, 20.0, 15.0, 15.0",
-        "10.0, 0.0, 5.0, 10.0",
-        "10.0, 0.0, 15.0, 15.0"
+        "10.0, 20.0, 15.0, 20.0",
+        "10.0, 0.0, 5.0, 5.0",
+        "10.0, 0.0, 15.0, 10.0"
     })
     @DisplayName("Clamp damage enforces bounds correctly")
     void clampDamageEnforcesBounds(double damage, double min, double max, double expected) {

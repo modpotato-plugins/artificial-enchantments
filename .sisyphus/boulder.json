@@ -27,6 +27,15 @@
       "agent": "Sisyphus-Junior",
       "category": "deep",
       "updated_at": "2026-04-19T13:14:02.646Z"
+    },
+    "todo:9": {
+      "task_key": "todo:9",
+      "task_label": "9",
+      "task_title": "Optional PacketEvents adapter boundary",
+      "session_id": "ses_25a1d5e64ffehRGBxsM3vO4ZND",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-04-19T13:21:23.247Z"
     }
   }
 }

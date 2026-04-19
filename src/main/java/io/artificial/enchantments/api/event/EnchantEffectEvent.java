@@ -5,6 +5,26 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Base class for all enchantment effect events dispatched through the event bus.
+ * 
+ * <p>Events extend this class to provide type-specific data for different game
+ * scenarios (combat, tool usage, etc.). Each event carries the enchantment
+ * definition, level, and scaled value that triggered it.
+ *
+ * <p><strong>Dispatch Order:</strong><br>
+ * Events are dispatched after typed callbacks from {@link io.artificial.enchantments.api.EnchantmentEffectHandler}.
+ * Both paths use the same dispatch spine for consistency.
+ *
+ * <p><strong>Cancellation:</strong><br>
+ * Subclasses that represent cancellable game events implement {@link org.bukkit.event.Cancellable}.
+ * Check {@link #isCancellable()} before calling {@link #checkCancelled()}.
+ *
+ * @see io.artificial.enchantments.api.EnchantmentEventBus
+ * @see CombatEvent
+ * @see ToolEvent
+ * @since 0.1.0
+ */
 public abstract class EnchantEffectEvent extends Event {
 
     private final EnchantmentDefinition enchantment;
