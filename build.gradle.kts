@@ -4,8 +4,9 @@ plugins {
     id("com.gradleup.shadow") version "8.3.5"
 }
 
-group = "io.artificial"
-version = "0.1.0-SNAPSHOT"
+// Read version and group from gradle.properties
+group = property("group") as String
+version = property("version") as String
 
 repositories {
     mavenCentral()

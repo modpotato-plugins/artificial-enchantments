@@ -86,10 +86,38 @@ jobs:
           echo "tag_version=v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Next version: $NEW_VERSION"
 
-      - name: Update version in gradle.properties
+      - name: Recursively update version references
         run: |
-          sed -i "s/^version=.*/version=${{ steps.bump_version.outputs.new_version }}/" gradle.properties
-          echo "Updated version to ${{ steps.bump_version.outputs.new_version }}"
+          NEW_VERSION="${{ steps.bump_version.outputs.new_version }}"
+          echo "Updating all version references to: $NEW_VERSION"
+          
+          # ── 1. gradle.properties (source of truth) ──
+          sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
+          echo "✓ Updated gradle.properties"
+          
+          # ── 2. build.gradle.kts (if any hardcoded version remains) ──
+          sed -i "s/version = \"[0-9]*\\.[0-9]*\\.[0-9]*[^\"]*\"/version = \"$NEW_VERSION\"/" build.gradle.kts
+          echo "✓ Updated build.gradle.kts"
+          
+          # ── 3. README.md version references ──
+          # Dependency examples: compileOnly("io.artificial:artificial-enchantments:X.Y.Z")
+          sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" README.md
+          echo "✓ Updated README.md"
+          
+          # ── 4. Documentation files ──
+          find docs -type f \( -name "*.md" -o -name "*.mdx" \) ! -name "CHANGELOG.md" 2>/dev/null | while read -r f; do
+            sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" "$f"
+            echo "✓ Updated $f"
+          done || echo "No docs/ directory found"
+          
+          # ── 5. plugin.yml version references ──
+          if [ -f "src/main/resources/plugin.yml" ]; then
+            sed -i -E "s/^version: .*/version: $NEW_VERSION/" src/main/resources/plugin.yml
+            echo "✓ Updated plugin.yml"
+          fi
+          
+          echo ""
+          echo "All version references updated to $NEW_VERSION"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -110,9 +138,8 @@ jobs:
 
       - name: Commit version bump
         run: |
-          git add gradle.properties
-          git commit -m "chore(release): bump version to ${{ steps.bump_version.outputs.new_version }} [skip ci]"
-          git push
+          git add -A
+          git commit -m "release: v${{ steps.bump_version.outputs.new_version }}"
 
       - name: Create and push tag
         run: |
