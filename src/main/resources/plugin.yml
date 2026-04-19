@@ -1,0 +1,9 @@
+name: artificial-enchantments
+version: ${version}
+main: io.artificial.enchantments.ArtificialEnchantmentsPlugin
+api-version: '1.21'
+folia-supported: true
+load: STARTUP
+authors: [ArtificialEnchantmentsTeam]
+description: A modern Paper 1.21+ library for creating custom enchantments using the native enchantment registry
+website: https://github.com/artificial-enchantments/artificial-enchantments
