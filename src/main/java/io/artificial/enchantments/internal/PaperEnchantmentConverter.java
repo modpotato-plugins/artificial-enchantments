@@ -1,0 +1,98 @@
+package io.artificial.enchantments.internal;
+
+import io.artificial.enchantments.api.EnchantmentDefinition;
+import io.papermc.paper.registry.RegistryKey;
+import io.papermc.paper.registry.TypedKey;
+import io.papermc.paper.registry.data.EnchantmentRegistryEntry;
+import io.papermc.paper.registry.event.RegistryFreezeEvent;
+import io.papermc.paper.registry.keys.EnchantmentKeys;
+import io.papermc.paper.registry.set.RegistryKeySet;
+import io.papermc.paper.registry.set.RegistrySet;
+import net.kyori.adventure.key.Key;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemType;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Converts library EnchantmentDefinition instances to Paper's native
+ * EnchantmentRegistryEntry.Builder format for registration during bootstrap.
+ */
+public final class PaperEnchantmentConverter {
+
+    /**
+     * Configures a Paper EnchantmentRegistryEntry.Builder from an EnchantmentDefinition.
+     *
+     * @param definition the library enchantment definition
+     * @param builder the Paper builder to configure
+     * @param event the registry freeze event for tag lookups
+     */
+    public static void convertToBuilder(
+            @NotNull EnchantmentDefinition definition,
+            @NotNull EnchantmentRegistryEntry.Builder builder,
+            @NotNull RegistryFreezeEvent<Enchantment, EnchantmentRegistryEntry.Builder> event) {
+
+        builder.description(definition.getDisplayName());
+        builder.maxLevel(definition.getMaxLevel());
+        builder.weight(convertRarityToWeight(definition.getRarity()));
+        builder.anvilCost(1 + definition.getMaxLevel() / 2);
+
+        RegistryKeySet<ItemType> supportedItems = determineSupportedItems(definition);
+        builder.supportedItems(supportedItems);
+        builder.primaryItems(supportedItems);
+
+        builder.minimumCost(EnchantmentRegistryEntry.EnchantmentCost.of(
+                1,
+                (int) definition.calculateScaledValue(1)
+        ));
+        builder.maximumCost(EnchantmentRegistryEntry.EnchantmentCost.of(
+                definition.getMaxLevel(),
+                (int) definition.calculateScaledValue(definition.getMaxLevel())
+        ));
+
+        if (definition.isCurse()) {
+            builder.activeSlots(org.bukkit.inventory.EquipmentSlotGroup.ANY);
+        }
+
+        if (!definition.getConflictingEnchantments().isEmpty()) {
+            Set<TypedKey<Enchantment>> conflictKeys = definition.getConflictingEnchantments()
+                    .stream()
+                    .map(key -> EnchantmentKeys.create(Key.key(key.getNamespace(), key.getKey())))
+                    .collect(Collectors.toSet());
+            builder.exclusiveWith(RegistrySet.keySet(RegistryKey.ENCHANTMENT, conflictKeys));
+        }
+    }
+
+    private static int convertRarityToWeight(@NotNull EnchantmentDefinition.Rarity rarity) {
+        return switch (rarity) {
+            case COMMON -> 10;
+            case UNCOMMON -> 5;
+            case RARE -> 2;
+            case VERY_RARE -> 1;
+        };
+    }
+
+    private static RegistryKeySet<ItemType> determineSupportedItems(@NotNull EnchantmentDefinition definition) {
+        Set<org.bukkit.Material> materials = definition.getApplicableMaterials();
+
+        if (materials.isEmpty()) {
+            return RegistrySet.keySet(RegistryKey.ITEM);
+        }
+
+        Set<Key> itemKeys = materials.stream()
+                .map(material -> Key.key(material.getKey().getNamespace(), material.getKey().getKey()))
+                .collect(Collectors.toSet());
+
+        try {
+            return RegistrySet.keySetFromValues(RegistryKey.ITEM,
+                    itemKeys.stream()
+                            .map(key -> org.bukkit.Registry.ITEM.get(key))
+                            .filter(item -> item != null)
+                            .collect(Collectors.toList()));
+        } catch (Exception e) {
+            return RegistrySet.keySet(RegistryKey.ITEM);
+        }
+    }
+}

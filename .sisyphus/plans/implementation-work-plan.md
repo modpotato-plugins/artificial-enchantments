@@ -335,7 +335,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
 
 ### Wave 2 — Core Runtime
 
-- [ ] 5. Native Paper bridge
+- [x] 5. Native Paper bridge
 
   **What to do**:
   - Implement the Paper 1.21+ bootstrap path and registry bridge.
@@ -388,7 +388,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
     Evidence: .sisyphus/evidence/task-5-native-display.log
   ```
 
-- [ ] 6. Item mutation service
+- [x] 6. Item mutation service
 
   **What to do**:
   - Implement add/remove/query methods for enchantments on items.
@@ -442,7 +442,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
     Evidence: .sisyphus/evidence/task-6-meta.log
   ```
 
-- [ ] 7. Effect runtime and dispatch spine
+- [x] 7. Effect runtime and dispatch spine
 
   **What to do**:
   - Implement one dispatcher that powers both typed callbacks and the event bus.
@@ -494,7 +494,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
     Evidence: .sisyphus/evidence/task-7-bus-cancel.log
   ```
 
-- [ ] 8. Scaling and attribute helpers
+- [x] 8. Scaling and attribute helpers
 
   **What to do**:
   - Implement built-in scaling formulas and custom scaling function support.

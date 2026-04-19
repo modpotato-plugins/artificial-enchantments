@@ -35,8 +35,8 @@ dependencies {
     // FoliaLib - must be shaded and relocated
     implementation("com.tcoded:FoliaLib:0.5.1")
     
-    // Item-NBT-API - compile only (not shaded)
-    compileOnly("de.tr7zw:item-nbt-api:2.14.1")
+    // Item-NBT-API - implementation for compilation
+    implementation("de.tr7zw:item-nbt-api:2.14.1")
     
     // Annotations
     compileOnly("org.jetbrains:annotations:24.1.0")
@@ -64,19 +64,12 @@ tasks.processResources {
     }
 }
 
-// Shadow JAR configuration for shading FoliaLib
-tasks.shadowJar {
-    archiveClassifier.set("")
-    
-    // Relocate FoliaLib to prevent conflicts with other plugins
-    relocate("com.tcoded.folialib", "io.artificial.enchantments.lib.folialib")
-    
-    // Minimize the JAR but exclude FoliaLib from minimization
-    minimize {
-        exclude(dependency("com.tcoded:FoliaLib:.*"))
-    }
-}
-
-tasks.build {
-    dependsOn(tasks.shadowJar)
-}
+// Shadow JAR configuration disabled for now due to plugin issues
+// tasks.shadowJar {
+//     archiveClassifier.set("")
+//     relocate("com.tcoded.folialib", "io.artificial.enchantments.lib.folialib")
+// }
+//
+// tasks.build {
+//     dependsOn(tasks.shadowJar)
+// }

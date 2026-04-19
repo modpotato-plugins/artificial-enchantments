@@ -18,6 +18,15 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-04-19T13:05:07.791Z"
+    },
+    "todo:5": {
+      "task_key": "todo:5",
+      "task_label": "5",
+      "task_title": "Native Paper bridge",
+      "session_id": "ses_25a257160ffezRIgqaTtuIUYpf",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-04-19T13:14:02.646Z"
     }
   }
 }
