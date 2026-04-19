@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("maven-publish")
     id("com.gradleup.shadow") version "8.3.5"
 }
 
@@ -64,6 +65,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.compileJava {
@@ -92,12 +94,30 @@ tasks.processResources {
     }
 }
 
-// Shadow JAR configuration disabled for now due to plugin issues
-// tasks.shadowJar {
-//     archiveClassifier.set("")
-//     relocate("com.tcoded.folialib", "io.artificial.enchantments.lib.folialib")
-// }
-//
-// tasks.build {
-//     dependsOn(tasks.shadowJar)
-// }
+// Shadow JAR configuration - shade FoliaLib for distribution
+tasks.shadowJar {
+    archiveClassifier.set("shaded")
+    relocate("com.tcoded.folialib", "io.artificial.enchantments.lib.folialib")
+}
+
+// Publishing to GitHub Packages
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "owner/repo"}")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user") as String?
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key") as String?
+            }
+        }
+    }
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+            artifact(tasks.shadowJar) {
+                classifier = "shaded"
+            }
+        }
+    }
+}
