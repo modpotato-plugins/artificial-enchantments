@@ -706,7 +706,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
 
 ## Final Verification Wave
 
-- [ ] F1. Plan compliance audit
+- [x] F1. Plan compliance audit
 
   **What to do**:
   - Verify every must-have is implemented.
@@ -717,7 +717,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
   - [ ] Must-have list is complete.
   - [ ] No scope violations are present.
 
-- [ ] F2. Code quality review
+- [x] F2. Code quality review
 
   **What to do**:
   - Run build/test/lint and inspect changed files for slop patterns.
@@ -726,7 +726,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
   - [ ] Build and tests pass.
   - [ ] No obvious code-quality regressions.
 
-- [ ] F3. End-to-end QA
+- [x] F3. End-to-end QA
 
   **What to do**:
   - Execute the scenarios from all tasks in an integrated environment.
@@ -734,7 +734,7 @@ Deliver a clean, high-reliability Paper 1.21+ enchantment library that plugin de
   **Acceptance Criteria**:
   - [ ] Scenarios pass in combination.
 
-- [ ] F4. Scope fidelity check
+- [x] F4. Scope fidelity check
 
   **What to do**:
   - Confirm implementation matches the locked scope and nothing more.
