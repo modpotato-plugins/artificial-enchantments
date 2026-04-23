@@ -11,6 +11,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,11 +55,15 @@ public final class EffectDispatchSpine {
     private final EventBusDispatcher eventBusDispatcher;
     private final FoliaScheduler scheduler;
     private final EnchantmentEventBus eventBus;
+    private final AtomicReference<EffectExecutionContext.ExecutionMode> executionMode;
 
     private volatile boolean shutdown = false;
 
     /**
      * Creates a new EffectDispatchSpine with the given components.
+     *
+     * <p>Defaults to LENIENT execution mode where exceptions in effect handlers
+     * are logged but do not prevent other handlers from executing.
      *
      * @param scheduler the folia scheduler for thread-safe dispatch
      * @param eventBus the event bus for dispatching events to listeners
@@ -67,8 +72,24 @@ public final class EffectDispatchSpine {
             @NotNull FoliaScheduler scheduler,
             @NotNull EnchantmentEventBus eventBus
     ) {
+        this(scheduler, eventBus, EffectExecutionContext.ExecutionMode.LENIENT);
+    }
+
+    /**
+     * Creates a new EffectDispatchSpine with the given components and execution mode.
+     *
+     * @param scheduler the folia scheduler for thread-safe dispatch
+     * @param eventBus the event bus for dispatching events to listeners
+     * @param executionMode the execution mode (LENIENT or STRICT)
+     */
+    public EffectDispatchSpine(
+            @NotNull FoliaScheduler scheduler,
+            @NotNull EnchantmentEventBus eventBus,
+            @NotNull EffectExecutionContext.ExecutionMode executionMode
+    ) {
         this.scheduler = scheduler;
         this.eventBus = eventBus;
+        this.executionMode = new AtomicReference<>(executionMode);
         this.contextFactory = new ContextFactory();
         this.typedCallbackDispatcher = new TypedCallbackDispatcher();
         this.eventBusDispatcher = new EventBusDispatcher(eventBus);
@@ -115,11 +136,11 @@ public final class EffectDispatchSpine {
             return false;
         }
 
+        EffectExecutionContext.ExecutionMode currentMode = executionMode.get();
+
         try {
-            // Calculate scaled value using the enchantment's scaling
             double scaledValue = enchantment.calculateScaledValue(level);
 
-            // Create the appropriate context for this event type
             EffectContext context = contextFactory.createContext(
                     eventType,
                     enchantment,
@@ -134,74 +155,62 @@ public final class EffectDispatchSpine {
                 return false;
             }
 
-            // Execute dispatch on the appropriate thread
-            return executeDispatch(enchantment, context, bukkitEvent, eventType);
+            EffectExecutionContext executionContext = new EffectExecutionContext(
+                    enchantment.getKey(),
+                    eventType.name(),
+                    level,
+                    currentMode
+            );
+
+            return executeDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
 
         } catch (Exception e) {
+            if (currentMode == EffectExecutionContext.ExecutionMode.STRICT) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new RuntimeException("Error in strict mode dispatch for " + enchantment.getKey(), e);
+                }
+            }
             LOGGER.log(Level.SEVERE, "Error dispatching effect for " + enchantment.getKey(), e);
             return false;
         }
     }
 
-    /**
-     * Executes the dispatch synchronously or asynchronously based on the bukkit event type.
-     *
-     * @param enchantment the enchantment being processed
-     * @param context the effect context
-     * @param bukkitEvent the underlying bukkit event
-     * @param eventType the type of dispatch event
-     * @return true if dispatch completed without cancellation
-     */
     private boolean executeDispatch(
             @NotNull EnchantmentDefinition enchantment,
             @NotNull EffectContext context,
             @NotNull Event bukkitEvent,
-            @NotNull DispatchEventType eventType
+            @NotNull DispatchEventType eventType,
+            @NotNull EffectExecutionContext executionContext
     ) {
-        // For async Bukkit events, we need to ensure thread safety
         boolean isAsync = bukkitEvent.isAsynchronous();
 
         if (isAsync) {
-            // Already on async thread - execute directly
-            return runDispatch(enchantment, context, bukkitEvent, eventType);
+            return runDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
         } else {
-            // On main thread - execute directly for simplicity and performance
-            // The FoliaScheduler is used for scheduling tasks, not for immediate dispatch
-            return runDispatch(enchantment, context, bukkitEvent, eventType);
+            return runDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
         }
     }
 
-    /**
-     * Runs the actual dispatch logic through both paths.
-     *
-     * @param enchantment the enchantment definition
-     * @param context the effect context
-     * @param bukkitEvent the underlying bukkit event
-     * @param eventType the type of event
-     * @return true if not cancelled, false if cancelled
-     */
     private boolean runDispatch(
             @NotNull EnchantmentDefinition enchantment,
             @NotNull EffectContext context,
             @NotNull Event bukkitEvent,
-            @NotNull DispatchEventType eventType
+            @NotNull DispatchEventType eventType,
+            @NotNull EffectExecutionContext executionContext
     ) {
-        // Track if anything has cancelled the effect
         boolean cancelled = false;
 
-        // PATH 1: Typed Callbacks (direct handler invocation)
-        cancelled = fireTypedCallbackPath(enchantment, context, eventType);
+        cancelled = fireTypedCallbackPath(enchantment, context, eventType, executionContext);
 
-        // Check cancellation after typed callback path
         if (cancelled || context.isCancelled()) {
             propagateCancellation(bukkitEvent);
             return false;
         }
 
-        // PATH 2: Event Bus (listeners)
-        cancelled = fireEventBusPath(enchantment, context, bukkitEvent, eventType);
+        cancelled = fireEventBusPath(enchantment, context, bukkitEvent, eventType, executionContext);
 
-        // Final cancellation check
         if (cancelled || context.isCancelled()) {
             propagateCancellation(bukkitEvent);
             return false;
@@ -210,53 +219,48 @@ public final class EffectDispatchSpine {
         return true;
     }
 
-    /**
-     * Fires the typed callback path - invokes methods on the enchantment's handler.
-     *
-     * @param enchantment the enchantment definition
-     * @param context the effect context
-     * @param eventType the type of event
-     * @return true if cancelled, false otherwise
-     */
     private boolean fireTypedCallbackPath(
             @NotNull EnchantmentDefinition enchantment,
             @NotNull EffectContext context,
-            @NotNull DispatchEventType eventType
+            @NotNull DispatchEventType eventType,
+            @NotNull EffectExecutionContext executionContext
     ) {
         EnchantmentEffectHandler handler = enchantment.getEffectHandler();
         if (handler == null) {
-            return false; // No handler = no cancellation from this path
-        }
-
-        try {
-            return typedCallbackDispatcher.dispatch(handler, context, eventType);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error in typed callback for " + enchantment.getKey(), e);
             return false;
         }
+
+        AtomicReference<Boolean> cancelled = new AtomicReference<>(false);
+
+        executionContext.executeWithIsolation(
+                handler.getClass(),
+                () -> {
+                    boolean wasCancelled = typedCallbackDispatcher.dispatch(handler, context, eventType);
+                    cancelled.set(wasCancelled);
+                }
+        );
+
+        return cancelled.get();
     }
 
-    /**
-     * Fires the event bus path - creates and dispatches the appropriate EnchantEffectEvent.
-     *
-     * @param enchantment the enchantment definition
-     * @param context the effect context
-     * @param bukkitEvent the underlying bukkit event
-     * @param eventType the type of event
-     * @return true if cancelled, false otherwise
-     */
     private boolean fireEventBusPath(
             @NotNull EnchantmentDefinition enchantment,
             @NotNull EffectContext context,
             @NotNull Event bukkitEvent,
-            @NotNull DispatchEventType eventType
+            @NotNull DispatchEventType eventType,
+            @NotNull EffectExecutionContext executionContext
     ) {
-        try {
-            return eventBusDispatcher.dispatch(enchantment, context, bukkitEvent, eventType);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error in event bus dispatch for " + enchantment.getKey(), e);
-            return false;
-        }
+        AtomicReference<Boolean> cancelled = new AtomicReference<>(false);
+
+        executionContext.executeWithIsolation(
+                EventBusDispatcher.class,
+                () -> {
+                    boolean wasCancelled = eventBusDispatcher.dispatch(enchantment, context, bukkitEvent, eventType);
+                    cancelled.set(wasCancelled);
+                }
+        );
+
+        return cancelled.get();
     }
 
     /**
@@ -305,6 +309,32 @@ public final class EffectDispatchSpine {
      */
     public boolean isShutdown() {
         return shutdown;
+    }
+
+    /**
+     * Gets the current execution mode.
+     *
+     * @return the current execution mode (LENIENT or STRICT)
+     */
+    @NotNull
+    public EffectExecutionContext.ExecutionMode getExecutionMode() {
+        return executionMode.get();
+    }
+
+    /**
+     * Sets the execution mode for effect handler failures.
+     *
+     * <p>In LENIENT mode (default), exceptions from effect handlers are logged
+     * but do not prevent other handlers from executing.
+     *
+     * <p>In STRICT mode, exceptions from effect handlers are logged and
+     * propagated to stop all further execution. This is useful for debugging.
+     *
+     * @param mode the execution mode to set
+     */
+    public void setExecutionMode(@NotNull EffectExecutionContext.ExecutionMode mode) {
+        this.executionMode.set(mode);
+        LOGGER.info("EffectDispatchSpine execution mode set to: " + mode);
     }
 
     /**

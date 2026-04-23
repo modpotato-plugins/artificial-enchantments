@@ -1,5 +1,18 @@
 package io.artificial.enchantments;
 
+import io.artificial.enchantments.api.ArtificialEnchantmentsAPI;
+import io.artificial.enchantments.api.ItemStorage;
+import io.artificial.enchantments.internal.BukkitFoliaScheduler;
+import io.artificial.enchantments.internal.EffectDispatchSpine;
+import io.artificial.enchantments.internal.EnchantmentEffectListener;
+import io.artificial.enchantments.internal.EnchantmentRegistryManager;
+import io.artificial.enchantments.internal.FoliaScheduler;
+import io.artificial.enchantments.internal.ItemEnchantmentService;
+import io.artificial.enchantments.internal.PaperRegistryBridge;
+import io.artificial.enchantments.internal.anvil.AnvilListener;
+import io.artificial.enchantments.internal.enchanttable.EnchantmentTableListener;
+import io.artificial.enchantments.internal.loot.BlockBreakLootHandler;
+import io.artificial.enchantments.internal.loot.BlockBreakLootListener;
 import io.artificial.enchantments.optional.packetevents.PacketEventsAdapter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +31,67 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
     @Nullable
     private PacketEventsAdapter packetEventsAdapter;
 
+    @Nullable
+    private EffectDispatchSpine effectDispatchSpine;
+
     @Override
     public void onEnable() {
         getLogger().info("Artificial Enchantments library enabled");
 
-        // Initialize optional PacketEvents adapter
+        ArtificialEnchantmentsAPI api = ArtificialEnchantmentsAPI.create(this);
+
+        registerEnchantmentTableListener();
+        registerAnvilListener(api.getItemStorage());
+        registerBlockBreakLootListener(api);
+        registerEffectListener(api);
         initializePacketEventsAdapter();
+    }
+
+    private void registerEnchantmentTableListener() {
+        EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
+        PaperRegistryBridge registryBridge = PaperRegistryBridge.getInstance();
+
+        EnchantmentTableListener listener = new EnchantmentTableListener(
+            this, registryManager, registryBridge
+        );
+
+        getServer().getPluginManager().registerEvents(listener, this);
+        getLogger().info("Enchantment table listener registered");
+    }
+
+    private void registerAnvilListener(@NotNull ItemStorage itemStorage) {
+        EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
+
+        AnvilListener listener = new AnvilListener(this, itemStorage, registryManager);
+
+        getServer().getPluginManager().registerEvents(listener, this);
+        getLogger().info("Anvil listener registered");
+    }
+
+    private void registerBlockBreakLootListener(@NotNull ArtificialEnchantmentsAPI api) {
+        EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
+        ItemEnchantmentService enchantmentService = new ItemEnchantmentService(api.getItemStorage(), registryManager);
+
+        BlockBreakLootListener listener = new BlockBreakLootListener(
+            this,
+            new BlockBreakLootHandler(api.getLootModifierRegistry(), enchantmentService)
+        );
+
+        getServer().getPluginManager().registerEvents(listener, this);
+        getLogger().info("Block break loot listener registered");
+    }
+
+    private void registerEffectListener(@NotNull ArtificialEnchantmentsAPI api) {
+        FoliaScheduler scheduler = new BukkitFoliaScheduler();
+        EffectDispatchSpine spine = new EffectDispatchSpine(scheduler, api.getEventBus());
+        this.effectDispatchSpine = spine;
+
+        EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
+        ItemEnchantmentService itemService = new ItemEnchantmentService(api.getItemStorage(), registryManager);
+
+        EnchantmentEffectListener listener = new EnchantmentEffectListener(this, spine, itemService);
+        getServer().getPluginManager().registerEvents(listener, this);
+        getLogger().info("Enchantment effect listener registered");
     }
 
     @Override
@@ -32,6 +100,11 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         if (packetEventsAdapter != null) {
             packetEventsAdapter.disable();
             packetEventsAdapter = null;
+        }
+
+        if (effectDispatchSpine != null) {
+            effectDispatchSpine.shutdown();
+            effectDispatchSpine = null;
         }
 
         getLogger().info("Artificial Enchantments library disabled");

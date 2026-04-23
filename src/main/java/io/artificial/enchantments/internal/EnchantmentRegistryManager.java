@@ -61,11 +61,11 @@ public final class EnchantmentRegistryManager {
     public boolean register(@NotNull EnchantmentDefinition definition) {
         NamespacedKey key = definition.getKey();
 
-        if (definitions.containsKey(key)) {
+        EnchantmentDefinition existing = definitions.putIfAbsent(key, definition);
+        if (existing != null) {
             return false;
         }
 
-        definitions.put(key, definition);
         pendingNativeRegistration.add(key);
 
         // Index by applicable materials

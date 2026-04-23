@@ -1,5 +1,8 @@
 package io.artificial.enchantments.api;
 
+import io.artificial.enchantments.api.loot.LootModifierRegistry;
+import io.artificial.enchantments.api.query.ItemEnchantmentQuery;
+import io.artificial.enchantments.api.scaling.ScalingAlgorithmRegistry;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -43,17 +46,13 @@ public interface ArtificialEnchantmentsAPI {
      * <p>This method initializes the library for use by your plugin. Each
      * plugin should call this once during {@code onEnable()}.
      *
-     * <p><strong>Implementation Note:</strong> This method throws in the API
-     * module because the actual implementation is provided by the core
-     * library at runtime.
-     *
      * @param plugin the plugin requesting the API (must not be null)
      * @return a new API instance bound to the plugin
-     * @throws UnsupportedOperationException in the API module
      * @since 0.1.0
      */
+    @NotNull
     static ArtificialEnchantmentsAPI create(@NotNull Plugin plugin) {
-        throw new UnsupportedOperationException("Implementation not available in API module");
+        return io.artificial.enchantments.internal.ArtificialEnchantmentsAPIImpl.create(plugin);
     }
 
     /**
@@ -62,16 +61,13 @@ public interface ArtificialEnchantmentsAPI {
      * <p>Use this to access the API after the bootstrap phase is complete.
      * This returns the same instance for all callers.
      *
-     * <p><strong>Implementation Note:</strong> This method throws in the API
-     * module because the actual implementation is provided by the core
-     * library at runtime.
-     *
      * @return the shared API instance
-     * @throws UnsupportedOperationException in the API module
+     * @throws IllegalStateException if the API has not been initialized
      * @since 0.1.0
      */
+    @NotNull
     static ArtificialEnchantmentsAPI getInstance() {
-        throw new UnsupportedOperationException("Implementation not available in API module");
+        return io.artificial.enchantments.internal.ArtificialEnchantmentsAPIImpl.getInstance();
     }
 
     /**
@@ -281,6 +277,33 @@ public interface ArtificialEnchantmentsAPI {
     ItemStorage getItemStorage();
 
     /**
+     * Gets the query facade for convenient enchantment lookups on items.
+     *
+     * <p>This provides a scoped, developer-friendly API for checking enchantments
+     * without manual ItemMeta inspection. All methods are null-safe and return
+     * sensible defaults for null inputs.
+     *
+     * <p><strong>Example Usage:</strong>
+     * <pre>{@code
+     * // Check if item has an enchantment
+     * if (api.query().hasEnchantment(item, lifeSteal)) {
+     *     int level = api.query().getLevel(item, lifeSteal);
+     * }
+     *
+     * // Get all enchantments
+     * Map<EnchantmentDefinition, Integer> enchantments = api.query().getAllEnchantments(item);
+     *
+     * // Check material applicability
+     * Set<EnchantmentDefinition> applicable = api.query().getEnchantmentsFor(Material.DIAMOND_SWORD);
+     * }</pre>
+     *
+     * @return the query facade instance
+     * @since 0.2.0
+     */
+    @NotNull
+    ItemEnchantmentQuery query();
+
+    /**
      * Gets the plugin that owns this API instance.
      *
      * @return the owning plugin
@@ -305,4 +328,47 @@ public interface ArtificialEnchantmentsAPI {
      */
     @NotNull
     String getVersion();
+
+    /**
+     * Gets the scaling algorithm registry.
+     *
+     * <p>Use this to register custom scaling algorithms or retrieve built-in ones.
+     * The registry is pre-populated with all built-in algorithms on startup.
+     *
+     * @return the scaling algorithm registry instance
+     * @since 0.2.0
+     */
+    @NotNull
+    ScalingAlgorithmRegistry getScalingRegistry();
+
+    /**
+     * Gets the loot modifier registry for block-break loot modifications.
+     *
+     * <p>Use this registry to register {@link io.artificial.enchantments.api.loot.LootModifier}
+     * instances that can modify drops when blocks are broken with enchanted tools.
+     *
+     * <p><strong>Explicit Ownership:</strong>
+     * Only enchantments with explicitly registered modifiers affect loot drops.
+     * Non-targeted loot remains untouched unless opted in.
+     *
+     * <p><strong>Usage Example:</strong>
+     * <pre>{@code
+     * LootModifierRegistry registry = api.getLootModifierRegistry();
+     *
+     * LootModifier myModifier = context -> {
+     *     // Double drops based on level
+     *     int multiplier = 1 + context.getLevel();
+     *     for (ItemStack drop : context.getDrops()) {
+     *         drop.setAmount(drop.getAmount() * multiplier);
+     *     }
+     * };
+     *
+     * registry.register(myEnchantment, myModifier);
+     * }</pre>
+     *
+     * @return the loot modifier registry instance
+     * @since 0.4.0
+     */
+    @NotNull
+    LootModifierRegistry getLootModifierRegistry();
 }

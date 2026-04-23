@@ -30,8 +30,8 @@ import java.util.UUID;
  *   <li>ARMOR_TOUGHNESS - Armor effectiveness</li>
  *   <li>MAX_HEALTH - Maximum health</li>
  *   <li>MOVEMENT_SPEED - Movement speed</li>
- *   <li>KNOCKBACK_RESISTANCE - Knockback reduction</li>
- * </ul></p>
+     *   <li>KNOCKBACK_RESISTANCE - Knockback reduction</li>
+     * </ul>
  */
 public final class AttributeModifierHelper {
 

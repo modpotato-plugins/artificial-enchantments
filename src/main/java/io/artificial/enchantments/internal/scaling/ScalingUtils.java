@@ -12,13 +12,13 @@ import java.util.function.Function;
  * used internally by the enchantment effect system. All scaling functions
  * are pure (no side effects, thread-safe).</p>
  * 
- * <p>Formula Reference:
+ * Formula Reference:
  * <ul>
  *   <li><strong>Linear:</strong> result = base + (level - 1) * increment</li>
  *   <li><strong>Exponential:</strong> result = base * multiplier^(level - 1)</li>
  *   <li><strong>Diminishing:</strong> result = max * (level / (level + scalingFactor))</li>
  *   <li><strong>Constant:</strong> result = value (independent of level)</li>
- * </ul></p>
+ * </ul>
  * 
  * @see io.artificial.enchantments.api.scaling.LevelScaling
  */
@@ -40,7 +40,7 @@ public final class ScalingUtils {
      * Level 1: 1.0 + (0) * 0.5 = 1.0
      * Level 5: 1.0 + (4) * 0.5 = 3.0
      * Level 10: 1.0 + (9) * 0.5 = 5.5
-     * </pre></p>
+     * </pre>
      *
      * @param base the base value at level 1
      * @param increment the amount added per level above 1
@@ -65,7 +65,7 @@ public final class ScalingUtils {
      * Level 1: 2.0 * 1.5^0 = 2.0
      * Level 5: 2.0 * 1.5^4 = 10.125
      * Level 10: 2.0 * 1.5^9 = 76.27
-     * </pre></p>
+     * </pre>
      *
      * @param base the base value at level 1
      * @param multiplier the factor multiplied per level (must be > 0)
@@ -92,7 +92,7 @@ public final class ScalingUtils {
      * Level 5: 10.0 * (5 / 10) = 5.0
      * Level 10: 10.0 * (10 / 15) = 6.67
      * Level 100: 10.0 * (100 / 105) = 9.52
-     * </pre></p>
+     * </pre>
      *
      * @param maxValue the asymptotic maximum value approached at high levels
      * @param scalingFactor controls how quickly the curve approaches maxValue (higher = slower)
@@ -132,7 +132,7 @@ public final class ScalingUtils {
      * 
      * // Logarithmic scaling: value = log(level + 1)
      * LevelScaling logScale = ScalingUtils.custom(level -&gt; Math.log(level + 1));
-     * </pre></p>
+     * </pre>
      *
      * @param formula the custom formula as a Function&lt;Integer, Double&gt;
      * @return a LevelScaling instance using the custom formula
@@ -158,7 +158,7 @@ public final class ScalingUtils {
      * Level 5: 10.0 * (1 - 0.9^5) = 4.1
      * Level 10: 10.0 * (1 - 0.9^10) = 6.51
      * Level 100: 10.0 * (1 - 0.9^100) ≈ 10.0
-     * </pre></p>
+     * </pre>
      *
      * @param maxValue the maximum value approached at infinite level
      * @param decayFactor the decay rate per level (0 &lt; decayFactor &lt; 1)
@@ -180,7 +180,7 @@ public final class ScalingUtils {
      * Validates that a level is valid (>= 1).
      *
      * @param level the level to validate
-     * @throws IllegalArgumentException if level < 1
+     * @throws IllegalArgumentException if level &lt; 1
      */
     public static void validateLevel(int level) {
         if (level < 1) {

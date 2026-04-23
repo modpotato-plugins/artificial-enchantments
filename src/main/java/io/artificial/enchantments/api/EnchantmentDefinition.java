@@ -7,6 +7,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -297,6 +300,31 @@ public interface EnchantmentDefinition {
         Builder scaling(@NotNull Function<Integer, Double> formula);
 
         /**
+         * Sets the scaling formula using a registered algorithm by name.
+         *
+         * <p>Uses the {@link io.artificial.enchantments.api.scaling.ScalingAlgorithmRegistry}
+         * to look up the algorithm and create a configured {@link LevelScaling} instance.
+         *
+         * <p><strong>Example:</strong>
+         * <pre>{@code
+         * .scaling("LINEAR", 1.0, 0.5)        // base=1.0, increment=0.5
+         * .scaling("EXPONENTIAL", 1.0, 1.2)   // base=1.0, multiplier=1.2
+         * .scaling("CONSTANT", 5.0)           // value=5.0 at all levels
+         * }</pre>
+         *
+         * @param algorithmName the algorithm name (must not be null, case-insensitive)
+         * @param params the algorithm-specific parameters
+         * @return this builder for chaining
+         * @throws IllegalArgumentException if algorithm not found or parameters invalid
+         * @see io.artificial.enchantments.api.scaling.ScalingAlgorithmRegistry
+         * @since 0.2.0
+         */
+        @NotNull
+        default Builder scaling(@NotNull String algorithmName, double... params) {
+            throw new UnsupportedOperationException("Implementation not available in API module");
+        }
+
+        /**
          * Sets applicable materials from a varargs list.
          *
          * @param materials the materials (must not be null)
@@ -404,17 +432,89 @@ public interface EnchantmentDefinition {
          */
         @NotNull
         EnchantmentDefinition build();
+
+        /**
+         * Validates the current builder state without building.
+         *
+         * <p>This method performs the same validation as {@link #build()} but
+         * provides detailed error information without actually creating the
+         * enchantment definition. Use this for pre-build validation when you
+         * need to check configuration before attempting to build.
+         *
+         * <p><strong>Default Behavior:</strong> The default implementation
+         * calls {@link #getValidationErrors()} and throws an exception if any
+         * errors exist. Override in implementations for custom validation.
+         *
+         * @throws IllegalStateException if validation fails, with detailed error message
+         * @since 0.2.0
+         */
+        default void validate() {
+            List<String> errors = getValidationErrors();
+            if (!errors.isEmpty()) {
+                throw new IllegalStateException(
+                    "Enchantment validation failed with " + errors.size() + " error(s):\n  - " +
+                    String.join("\n  - ", errors)
+                );
+            }
+        }
+
+        /**
+         * Checks if the current builder state is valid.
+         *
+         * <p>This is a non-throwing alternative to {@link #validate()}. Returns
+         * true only if all validation rules pass and the enchantment can be built
+         * successfully.
+         *
+         * <p><strong>Default Behavior:</strong> Returns true if
+         * {@link #getValidationErrors()} returns an empty list.
+         *
+         * @return true if valid, false if validation errors exist
+         * @since 0.2.0
+         */
+        default boolean isValid() {
+            return getValidationErrors().isEmpty();
+        }
+
+        /**
+         * Gets all validation errors for the current builder state.
+         *
+         * <p>Returns a list of detailed error messages describing what validation
+         * rules are currently violated. An empty list indicates the builder is
+         * in a valid state.
+         *
+         * <p>Validation checks include:
+         * <ul>
+         *   <li>Required fields: key, displayName, scaling, applicable materials</li>
+         *   <li>Level bounds: minLevel >= 1, maxLevel > minLevel</li>
+         *   <li>Material set: non-empty set of applicable materials</li>
+         *   <li>Conflicts: no self-conflicts (enchantment cannot conflict with itself)</li>
+         *   <li>Cross-property: warnings for curse + tradeable combinations</li>
+         * </ul>
+         *
+         * <p><strong>Default Behavior:</strong> Returns an empty list. Override
+         * in implementations to provide actual validation logic.
+         *
+         * @return unmodifiable list of validation error messages (empty if valid)
+         * @since 0.2.0
+         */
+        @NotNull
+        default List<String> getValidationErrors() {
+            return Collections.emptyList();
+        }
     }
 
     /**
      * Creates a new builder for constructing enchantment definitions.
      *
+     * <p>The returned builder provides comprehensive validation methods including
+     * {@link Builder#validate()}, {@link Builder#isValid()}, and
+     * {@link Builder#getValidationErrors()} for pre-build validation.
+     *
      * @return a new builder instance
-     * @throws UnsupportedOperationException in the API module
-     * @since 0.1.0
+     * @since 0.2.0
      */
     @NotNull
     static Builder builder() {
-        throw new UnsupportedOperationException("Implementation not available in API module");
+        return new io.artificial.enchantments.internal.EnchantmentDefinitionBuilder();
     }
 }

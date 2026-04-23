@@ -328,7 +328,7 @@ public final class DamageModifierHelper {
      *   <li>Multiplicative bonuses</li>
      *   <li>Critical multiplier</li>
      *   <li>Clamping</li>
-     * </ol></p>
+     * </ol>
      *
      * @param baseDamage starting damage
      * @param additiveBonus flat damage bonus
