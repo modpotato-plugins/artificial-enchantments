@@ -10,6 +10,8 @@ import io.artificial.enchantments.api.scaling.ScalingAlgorithmRegistry;
 import io.artificial.enchantments.internal.loot.LootModifierRegistryImpl;
 import io.artificial.enchantments.internal.query.ItemEnchantmentQueryImpl;
 import io.artificial.enchantments.internal.scaling.ScalingAlgorithmRegistryImpl;
+
+import io.artificial.enchantments.internal.FoliaScheduler;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -40,6 +42,7 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
     private final ItemEnchantmentQuery queryFacade;
     private final LootModifierRegistry lootModifierRegistry;
     private final EnchantmentEventBus eventBus;
+    private final FoliaScheduler scheduler;
 
     private ArtificialEnchantmentsAPIImpl(@NotNull Plugin plugin) {
         this.plugin = plugin;
@@ -49,6 +52,7 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
         this.queryFacade = new ItemEnchantmentQueryImpl(itemStorage, registryManager);
         this.lootModifierRegistry = new LootModifierRegistryImpl();
         this.eventBus = new EnchantmentEventBusImpl();
+        this.scheduler = new BukkitFoliaScheduler();
     }
 
     /**
@@ -215,6 +219,12 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
     @NotNull
     public LootModifierRegistry getLootModifierRegistry() {
         return lootModifierRegistry;
+    }
+
+    @Override
+    @NotNull
+    public FoliaScheduler getScheduler() {
+        return scheduler;
     }
 
     @NotNull

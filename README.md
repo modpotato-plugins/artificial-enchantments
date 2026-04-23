@@ -19,7 +19,23 @@ A Paper 1.21+ library for creating custom enchantments with native registry inte
 
 ## Installation
 
-Add to your `build.gradle`:
+### For Server Administrators
+
+Install `artificial-enchantments-1.0.0.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
+
+```bash
+# Download the shaded JAR (includes all required dependencies)
+wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/v1.0.0/artificial-enchantments-1.0.0.jar
+
+# Place in plugins folder
+cp artificial-enchantments-1.0.0.jar /path/to/server/plugins/
+```
+
+### For Plugin Developers
+
+Add as a `compileOnly` dependency. **Do NOT shade this library** — see [Multi-Plugin Usage](#multi-plugin-usage) for why.
+
+`build.gradle`:
 
 ```kotlin
 dependencies {
@@ -27,11 +43,69 @@ dependencies {
 }
 ```
 
-Or `build.gradle.kts`:
+`build.gradle.kts`:
 
 ```kotlin
 dependencies {
     compileOnly("io.artificial:artificial-enchantments:1.0.0")
+}
+```
+
+`plugin.yml`:
+
+```yaml
+depend: [ArtificialEnchantments]
+# or soft-depend if you want graceful degradation:
+# softdepend: [ArtificialEnchantments]
+```
+
+## Multi-Plugin Usage
+
+Artificial Enchantments is designed as a **shared plugin library**. It must be installed once as a server plugin, and all dependent plugins reference it via `compileOnly`.
+
+### Why Not Shading?
+
+**Do not shade this library into your plugin.** Doing so will cause serious problems:
+
+| Problem | Cause |
+|---------|-------|
+| **Duplicate event listeners** | Each shaded copy registers its own Bukkit listeners, causing effects to fire multiple times |
+| **Registry desync** | Each copy has its own `EnchantmentRegistryManager` singleton — enchantments registered in one copy are invisible to others |
+| **Native registry corruption** | Paper's native enchantment registry receives duplicate/conflicting registrations |
+| **Folia scheduler leaks** | Each copy spawns its own scheduler threads, never cleaned up |
+| **Event bus isolation** | Subscribers in one shaded copy cannot see events from another |
+
+### The Shared Plugin Model
+
+```
+Server
+├── plugins/
+│   ├── artificial-enchantments-1.0.0.jar  <-- Install once here
+│   ├── my-enchants-plugin.jar              <-- compileOnly dependency
+│   └── another-enchants-plugin.jar         <-- compileOnly dependency
+```
+
+Both `my-enchants-plugin` and `another-enchants-plugin` call `ArtificialEnchantmentsAPI.getInstance()` and receive the **same shared instance**. Their enchantments coexist in a single registry, effects dispatch through a single spine, and all events are visible to all listeners.
+
+### Lifecycle Safety
+
+The library initializes on first `create(plugin)` call and persists until the server shuts down. Individual plugins can safely call `create()` in their `onEnable()` — subsequent calls return the existing instance without side effects.
+
+```java
+@Override
+public void onEnable() {
+    // Safe to call even if another plugin already initialized
+    ArtificialEnchantmentsAPI api = ArtificialEnchantmentsAPI.create(this);
+    
+    // Register your enchantments
+    api.registerEnchantment(myEnchantment);
+}
+
+@Override
+public void onDisable() {
+    // Optional: unregister your enchantments to clean up
+    ArtificialEnchantmentsAPI api = ArtificialEnchantmentsAPI.getInstance();
+    api.unregisterEnchantment(myEnchantment.getKey());
 }
 ```
 

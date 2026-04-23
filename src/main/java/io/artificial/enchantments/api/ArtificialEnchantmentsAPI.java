@@ -371,4 +371,33 @@ public interface ArtificialEnchantmentsAPI {
      */
     @NotNull
     LootModifierRegistry getLootModifierRegistry();
+
+    /**
+     * Gets the Folia-compatible scheduler for thread-safe task execution.
+     *
+     * <p>Use this scheduler to run tasks on the appropriate threads:
+     * <ul>
+     *   <li>Global region thread - for non-location-dependent operations</li>
+     *   <li>Region thread - for location-dependent operations</li>
+     *   <li>Entity scheduler - for entity-specific operations</li>
+     * </ul>
+     *
+     * <p><strong>Usage Example:</strong>
+     * <pre>{@code
+     * // Run later on global region thread
+     * api.getScheduler().runGlobalDelayed(plugin, () -> {
+     *     // Task here
+     * }, 20L);
+     *
+     * // Run at a specific location's region thread
+     * api.getScheduler().runAtLocation(plugin, location, () -> {
+     *     // Location-dependent task
+     * });
+     * }</pre>
+     *
+     * @return the scheduler instance
+     * @since 0.2.0
+     */
+    @NotNull
+    io.artificial.enchantments.internal.FoliaScheduler getScheduler();
 }

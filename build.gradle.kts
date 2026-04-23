@@ -99,10 +99,21 @@ tasks.processResources {
     }
 }
 
-// Shadow JAR configuration - shade FoliaLib for distribution
+// Shadow JAR configuration - shade all embedded dependencies to prevent conflicts
 tasks.shadowJar {
-    archiveClassifier.set("shaded")
+    archiveClassifier.set("")
     relocate("com.tcoded.folialib", "io.artificial.enchantments.lib.folialib")
+    relocate("de.tr7zw.nbtapi", "io.artificial.enchantments.lib.nbtapi")
+}
+
+// Use shadow JAR as the primary artifact
+tasks.jar {
+    archiveClassifier.set("unshaded")
+}
+
+// Ensure assemble builds the shadow JAR by default
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
 
 // Publishing to GitHub Packages

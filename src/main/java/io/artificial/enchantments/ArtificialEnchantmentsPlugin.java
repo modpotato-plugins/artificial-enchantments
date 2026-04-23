@@ -5,6 +5,7 @@ import io.artificial.enchantments.api.ItemStorage;
 import io.artificial.enchantments.internal.BukkitFoliaScheduler;
 import io.artificial.enchantments.internal.EffectDispatchSpine;
 import io.artificial.enchantments.internal.EnchantmentEffectListener;
+import io.artificial.enchantments.internal.EnchantmentTickTask;
 import io.artificial.enchantments.internal.EnchantmentRegistryManager;
 import io.artificial.enchantments.internal.FoliaScheduler;
 import io.artificial.enchantments.internal.ItemEnchantmentService;
@@ -34,6 +35,12 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
     @Nullable
     private EffectDispatchSpine effectDispatchSpine;
 
+    @Nullable
+    private EnchantmentTickTask tickTask;
+
+    @Nullable
+    private ItemEnchantmentService itemEnchantmentService;
+
     @Override
     public void onEnable() {
         getLogger().info("Artificial Enchantments library enabled");
@@ -44,6 +51,12 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         registerAnvilListener(api.getItemStorage());
         registerBlockBreakLootListener(api);
         registerEffectListener(api);
+
+        if (itemEnchantmentService != null && effectDispatchSpine != null) {
+            this.tickTask = new EnchantmentTickTask(this, effectDispatchSpine, itemEnchantmentService);
+            this.tickTask.start();
+        }
+
         initializePacketEventsAdapter();
     }
 
@@ -87,15 +100,20 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         this.effectDispatchSpine = spine;
 
         EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
-        ItemEnchantmentService itemService = new ItemEnchantmentService(api.getItemStorage(), registryManager);
+        this.itemEnchantmentService = new ItemEnchantmentService(api.getItemStorage(), registryManager);
 
-        EnchantmentEffectListener listener = new EnchantmentEffectListener(this, spine, itemService);
+        EnchantmentEffectListener listener = new EnchantmentEffectListener(this, spine, this.itemEnchantmentService);
         getServer().getPluginManager().registerEvents(listener, this);
         getLogger().info("Enchantment effect listener registered");
     }
 
     @Override
     public void onDisable() {
+        if (tickTask != null) {
+            tickTask.stop();
+            tickTask = null;
+        }
+
         // Disable PacketEvents adapter if it was enabled
         if (packetEventsAdapter != null) {
             packetEventsAdapter.disable();

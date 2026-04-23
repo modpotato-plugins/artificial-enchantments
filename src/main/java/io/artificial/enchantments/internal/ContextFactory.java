@@ -236,12 +236,33 @@ public final class ContextFactory {
             @Nullable EquipmentSlot slot,
             @NotNull EffectDispatchSpine.DispatchEventType eventType
     ) {
-        if (bukkitEvent instanceof EntityShootBowEvent bowEvent) {
+        if (eventType == EffectDispatchSpine.DispatchEventType.BOW_SHOOT
+                && bukkitEvent instanceof EntityShootBowEvent bowEvent) {
             return new WeaponContextImpl(
                     enchantment, level, scaledValue, bowEvent, slot
             );
         }
-        // Trident throw is typically handled via ProjectileLaunchEvent
+        if (eventType == EffectDispatchSpine.DispatchEventType.TRIDENT_THROW
+                && bukkitEvent instanceof ProjectileLaunchEvent launchEvent) {
+            if (launchEvent.getEntity() instanceof org.bukkit.entity.Trident tridentEntity) {
+                if (tridentEntity.getShooter() instanceof Player player) {
+                    ItemStack weapon;
+                    if (slot != null) {
+                        weapon = player.getInventory().getItem(slot);
+                    } else {
+                        weapon = player.getInventory().getItemInMainHand();
+                        if (weapon.getType() != org.bukkit.Material.TRIDENT) {
+                            weapon = player.getInventory().getItemInOffHand();
+                        }
+                    }
+                    if (weapon != null && weapon.getType() == org.bukkit.Material.TRIDENT) {
+                        return new WeaponContextImpl(
+                                enchantment, level, scaledValue, player, weapon, tridentEntity, slot
+                        );
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -1408,6 +1429,27 @@ public final class ContextFactory {
                     || weapon.getType() == org.bukkit.Material.CROSSBOW;
             this.isShooting = true;
             this.force = bowEvent.getForce();
+            this.critical = false;
+        }
+
+        WeaponContextImpl(
+                @NotNull EnchantmentDefinition enchantment,
+                int level,
+                double scaledValue,
+                @NotNull Player player,
+                @NotNull ItemStack weapon,
+                @NotNull Projectile projectile,
+                @Nullable EquipmentSlot slot
+        ) {
+            super(enchantment, level, scaledValue);
+            this.player = player;
+            this.weapon = weapon;
+            this.location = player.getLocation();
+            this.target = null;
+            this.projectile = projectile;
+            this.isBow = false;
+            this.isShooting = false;
+            this.force = 1.0f;
             this.critical = false;
         }
 
