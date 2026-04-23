@@ -26,6 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import org.bukkit.damage.DamageSource;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("EffectDispatchSpine Tests")
@@ -55,7 +61,7 @@ class EffectDispatchSpineTest {
     @DisplayName("Dispatch with invalid level returns false")
     void dispatchWithInvalidLevelReturnsFalse() {
         EnchantmentDefinition enchantment = createTestEnchantment("test", 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         boolean result = spine.dispatch(enchantment, 0, bukkitEvent, EquipmentSlot.HAND, 
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -67,7 +73,7 @@ class EffectDispatchSpineTest {
     @DisplayName("Dispatch with level below min returns false")
     void dispatchWithLevelBelowMinReturnsFalse() {
         EnchantmentDefinition enchantment = createTestEnchantment("test", 3, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         boolean result = spine.dispatch(enchantment, 1, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -79,7 +85,7 @@ class EffectDispatchSpineTest {
     @DisplayName("Dispatch with level above max returns false")
     void dispatchWithLevelAboveMaxReturnsFalse() {
         EnchantmentDefinition enchantment = createTestEnchantment("test", 1, 3);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         boolean result = spine.dispatch(enchantment, 5, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -104,7 +110,7 @@ class EffectDispatchSpineTest {
     @DisplayName("Dispatch with shutdown spine returns false")
     void dispatchWithShutdownSpineReturnsFalse() {
         EnchantmentDefinition enchantment = createTestEnchantment("test", 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         spine.shutdown();
         boolean result = spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
@@ -126,7 +132,7 @@ class EffectDispatchSpineTest {
         };
         
         EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("callback_test", handler, 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -145,7 +151,7 @@ class EffectDispatchSpineTest {
         });
         
         EnchantmentDefinition enchantment = createTestEnchantment("bus_test", 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -164,7 +170,7 @@ class EffectDispatchSpineTest {
         };
         
         EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("cancel_test", handler, 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         boolean result = spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -176,7 +182,7 @@ class EffectDispatchSpineTest {
     @DisplayName("Dispatch with null handler skips callback path")
     void dispatchWithNullHandlerSkipsCallback() {
         EnchantmentDefinition enchantment = createTestEnchantment("no_handler", 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         boolean result = spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -208,7 +214,7 @@ class EffectDispatchSpineTest {
         };
         
         EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("scaling_test", handler, 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         spine.dispatch(enchantment, 3, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -229,7 +235,7 @@ class EffectDispatchSpineTest {
         };
         
         EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("level_test", handler, 1, 5);
-        MockCancellableEvent bukkitEvent = createMockCombatEvent();
+        Event bukkitEvent = createMockCombatEvent();
         
         spine.dispatch(enchantment, 4, bukkitEvent, EquipmentSlot.HAND,
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
@@ -245,8 +251,19 @@ class EffectDispatchSpineTest {
         return new TestEnchantmentDefinition(name, handler, minLevel, maxLevel);
     }
 
-    private MockCancellableEvent createMockCombatEvent() {
-        return new MockCancellableEvent(false);
+    private Event createMockCombatEvent() {
+        EntityDamageByEntityEvent mockEvent = mock(EntityDamageByEntityEvent.class);
+        LivingEntity mockVictim = mock(LivingEntity.class);
+        DamageSource mockSource = mock(DamageSource.class);
+
+        when(mockEvent.isAsynchronous()).thenReturn(false);
+        when(mockEvent.isCancelled()).thenReturn(false);
+        when(mockEvent.getDamage()).thenReturn(5.0);
+        when(mockEvent.getEntity()).thenReturn(mockVictim);
+        when(mockEvent.getDamageSource()).thenReturn(mockSource);
+        when(mockEvent.getCause()).thenReturn(EntityDamageEvent.DamageCause.CUSTOM);
+
+        return mockEvent;
     }
 
     private static class MockCancellableEvent extends Event implements Cancellable {

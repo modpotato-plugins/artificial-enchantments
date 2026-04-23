@@ -59,6 +59,10 @@ dependencies {
 
     // MockBukkit for testing Bukkit classes without a server
     testImplementation("com.github.seeseemelk:MockBukkit-v1.21:3.128.0")
+
+    // Mockito for mocking
+    testImplementation("org.mockito:mockito-core:5.12.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
 }
 
 java {

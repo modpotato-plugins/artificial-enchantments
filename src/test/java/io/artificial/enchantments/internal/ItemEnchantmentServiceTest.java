@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @DisplayName("ItemEnchantmentService Tests")
 class ItemEnchantmentServiceTest {
@@ -160,7 +162,7 @@ class ItemEnchantmentServiceTest {
     @DisplayName("Apply enchantment by definition delegates to storage")
     void applyEnchantmentByDefinitionDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("apply_def");
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.applyEnchantment(item, enchantment, 3);
         
@@ -172,7 +174,7 @@ class ItemEnchantmentServiceTest {
     void applyEnchantmentByKeyDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("apply_key");
         service.registerEnchantment(enchantment);
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.applyEnchantment(item, enchantment.getKey(), 2);
         
@@ -183,7 +185,7 @@ class ItemEnchantmentServiceTest {
     @DisplayName("Remove enchantment by definition delegates to storage")
     void removeEnchantmentByDefinitionDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("remove_def");
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.removeEnchantment(item, enchantment);
         
@@ -195,7 +197,7 @@ class ItemEnchantmentServiceTest {
     void removeEnchantmentByKeyDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("remove_key");
         service.registerEnchantment(enchantment);
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.removeEnchantment(item, enchantment.getKey());
         
@@ -205,7 +207,7 @@ class ItemEnchantmentServiceTest {
     @Test
     @DisplayName("Remove all enchantments delegates to storage")
     void removeAllEnchantmentsDelegates() {
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.removeAllEnchantments(item);
         
@@ -216,7 +218,7 @@ class ItemEnchantmentServiceTest {
     @DisplayName("Get enchantment level by definition delegates to storage")
     void getEnchantmentLevelByDefinitionDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("level_def");
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         int level = service.getEnchantmentLevel(item, enchantment);
         
@@ -228,7 +230,7 @@ class ItemEnchantmentServiceTest {
     void getEnchantmentLevelByKeyDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("level_key");
         service.registerEnchantment(enchantment);
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         int level = service.getEnchantmentLevel(item, enchantment.getKey());
         
@@ -238,7 +240,7 @@ class ItemEnchantmentServiceTest {
     @Test
     @DisplayName("Get enchantments returns map from storage")
     void getEnchantmentsReturnsMap() {
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         Map<EnchantmentDefinition, Integer> result = service.getEnchantments(item);
         
@@ -249,7 +251,7 @@ class ItemEnchantmentServiceTest {
     @Test
     @DisplayName("Get enchantment keys returns map from storage")
     void getEnchantmentKeysReturnsMap() {
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         Map<NamespacedKey, Integer> result = service.getEnchantmentKeys(item);
         
@@ -261,7 +263,7 @@ class ItemEnchantmentServiceTest {
     @DisplayName("Has enchantment by definition delegates to storage")
     void hasEnchantmentByDefinitionDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("has_def");
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         boolean result = service.hasEnchantment(item, enchantment);
         
@@ -273,7 +275,7 @@ class ItemEnchantmentServiceTest {
     void hasEnchantmentByKeyDelegates() {
         EnchantmentDefinition enchantment = createTestEnchantment("has_key");
         service.registerEnchantment(enchantment);
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         boolean result = service.hasEnchantment(item, enchantment.getKey());
         
@@ -283,7 +285,7 @@ class ItemEnchantmentServiceTest {
     @Test
     @DisplayName("Set auxiliary metadata delegates to storage")
     void setAuxiliaryMetadataDelegates() {
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         org.bukkit.inventory.ItemStack result = service.setAuxiliaryMetadata(item, "test_key", "test_value");
         
@@ -293,11 +295,19 @@ class ItemEnchantmentServiceTest {
     @Test
     @DisplayName("Get auxiliary metadata delegates to storage")
     void getAuxiliaryMetadataDelegates() {
-        org.bukkit.inventory.ItemStack item = new org.bukkit.inventory.ItemStack(Material.DIAMOND_SWORD);
+        org.bukkit.inventory.ItemStack item = mockItemStack(Material.DIAMOND_SWORD);
         
         String result = service.getAuxiliaryMetadata(item, "test_key");
         
         assertNull(result);
+    }
+
+    private org.bukkit.inventory.ItemStack mockItemStack(Material material) {
+        org.bukkit.inventory.ItemStack mock = mock(org.bukkit.inventory.ItemStack.class);
+        when(mock.getType()).thenReturn(material);
+        when(mock.getAmount()).thenReturn(1);
+        when(mock.clone()).thenReturn(mock);
+        return mock;
     }
 
     private ItemStorage createMockItemStorage() {
