@@ -212,20 +212,40 @@ public final class EffectExecutionContext {
 
     // Getters
 
+    /**
+     * Gets the enchantment key.
+     *
+     * @return the enchantment's namespaced key
+     */
     @NotNull
     public NamespacedKey getEnchantmentKey() {
         return enchantmentKey;
     }
 
+    /**
+     * Gets the effect type.
+     *
+     * @return the type of effect being executed
+     */
     @NotNull
     public String getEffectType() {
         return effectType;
     }
 
+    /**
+     * Gets the enchantment level.
+     *
+     * @return the enchantment level
+     */
     public int getLevel() {
         return level;
     }
 
+    /**
+     * Gets the execution mode.
+     *
+     * @return the current execution mode
+     */
     @NotNull
     public ExecutionMode getExecutionMode() {
         return executionMode;
@@ -253,6 +273,9 @@ public final class EffectExecutionContext {
         return new EffectExecutionContext(enchantmentKey, effectType, level, mode);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -264,11 +287,17 @@ public final class EffectExecutionContext {
                 executionMode == that.executionMode;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(enchantmentKey, effectType, level, executionMode);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "EffectExecutionContext{" +
@@ -283,6 +312,12 @@ public final class EffectExecutionContext {
      * Exception thrown when strict mode is enabled and an effect handler fails.
      */
     public static class EffectExecutionException extends RuntimeException {
+        /**
+         * Creates a new effect execution exception.
+         *
+         * @param message the detail message
+         * @param cause the underlying cause
+         */
         public EffectExecutionException(String message, Throwable cause) {
             super(message, cause);
         }

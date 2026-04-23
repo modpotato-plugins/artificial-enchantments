@@ -31,6 +31,11 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
     private String displayName;
     private boolean treasure;
 
+    /**
+     * Creates a new enchanted book builder.
+     *
+     * @param itemStorage the item storage for applying enchantments
+     */
     public EnchantedBookBuilderImpl(@NotNull ItemStorage itemStorage) {
         this.itemStorage = Objects.requireNonNull(itemStorage, "itemStorage cannot be null");
         this.registryManager = EnchantmentRegistryManager.getInstance();
@@ -39,6 +44,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         this.treasure = false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder withEnchantment(@NotNull EnchantmentDefinition enchantment, int level) {
@@ -56,6 +64,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder withEnchantment(@NotNull NamespacedKey key, int level) {
@@ -69,6 +80,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return withEnchantment(definition, level);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder displayName(@Nullable String displayName) {
@@ -76,6 +90,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder lore(@NotNull String... lore) {
@@ -88,6 +105,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder treasure(boolean treasure) {
@@ -95,6 +115,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public ItemStack build() {
@@ -135,6 +158,9 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
         return book;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantedBook.Builder reset() {

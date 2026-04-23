@@ -29,16 +29,27 @@ public class EnchantedBookImpl implements EnchantedBook {
 
     private final ItemStorage itemStorage;
 
+    /**
+     * Creates a new enchanted book implementation.
+     *
+     * @param itemStorage the item storage for enchantment operations
+     */
     public EnchantedBookImpl(@NotNull ItemStorage itemStorage) {
         this.itemStorage = Objects.requireNonNull(itemStorage, "itemStorage cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isEnchantedBook(@NotNull ItemStack item) {
         Objects.requireNonNull(item, "item cannot be null");
         return item.getType() == Material.ENCHANTED_BOOK;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasCustomEnchantments(@NotNull ItemStack book) {
         Objects.requireNonNull(book, "book cannot be null");
@@ -50,6 +61,9 @@ public class EnchantedBookImpl implements EnchantedBook {
         return !enchantments.isEmpty();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public Map<EnchantmentDefinition, Integer> getEnchantments(@NotNull ItemStack book) {
@@ -61,11 +75,14 @@ public class EnchantedBookImpl implements EnchantedBook {
         return itemStorage.getEnchantments(book);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getEnchantmentLevel(@NotNull ItemStack book, @NotNull EnchantmentDefinition enchantment) {
         Objects.requireNonNull(book, "book cannot be null");
         Objects.requireNonNull(enchantment, "enchantment cannot be null");
-        
+
         if (!isEnchantedBook(book)) {
             return 0;
         }
@@ -73,11 +90,14 @@ public class EnchantedBookImpl implements EnchantedBook {
         return itemStorage.getEnchantmentLevel(book, enchantment);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getEnchantmentLevel(@NotNull ItemStack book, @NotNull NamespacedKey key) {
         Objects.requireNonNull(book, "book cannot be null");
         Objects.requireNonNull(key, "key cannot be null");
-        
+
         if (!isEnchantedBook(book)) {
             return 0;
         }
@@ -85,6 +105,9 @@ public class EnchantedBookImpl implements EnchantedBook {
         return itemStorage.getEnchantmentLevel(book, key);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public Map<NamespacedKey, Integer> getAllEnchantmentKeys(@NotNull ItemStack book) {
@@ -106,16 +129,25 @@ public class EnchantedBookImpl implements EnchantedBook {
         return Collections.unmodifiableMap(result);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasEnchantment(@NotNull ItemStack book, @NotNull EnchantmentDefinition enchantment) {
         return getEnchantmentLevel(book, enchantment) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasEnchantment(@NotNull ItemStack book, @NotNull NamespacedKey key) {
         return getEnchantmentLevel(book, key) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public Builder builder() {

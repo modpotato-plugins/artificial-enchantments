@@ -43,6 +43,8 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
     private final LootModifierRegistry lootModifierRegistry;
     private final EnchantmentEventBus eventBus;
     private final FoliaScheduler scheduler;
+    private final ScalingAlgorithmRegistry scalingRegistry;
+    private final String version;
 
     private ArtificialEnchantmentsAPIImpl(@NotNull Plugin plugin) {
         this.plugin = plugin;
@@ -53,6 +55,8 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
         this.lootModifierRegistry = new LootModifierRegistryImpl();
         this.eventBus = new EnchantmentEventBusImpl();
         this.scheduler = new BukkitFoliaScheduler();
+        this.scalingRegistry = new ScalingAlgorithmRegistryImpl();
+        this.version = loadVersion();
     }
 
     /**
@@ -206,13 +210,13 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
     @Override
     @NotNull
     public String getVersion() {
-        return "0.2.0";
+        return version;
     }
 
     @Override
     @NotNull
     public ScalingAlgorithmRegistry getScalingRegistry() {
-        return new ScalingAlgorithmRegistryImpl();
+        return scalingRegistry;
     }
 
     @Override
@@ -231,5 +235,22 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
     private ItemStorage createItemStorage() {
         NbtMetadataStorage nbtStorage = new NbtMetadataStorage();
         return new NativeFirstItemStorage(() -> registryManager, nbtStorage);
+    }
+
+    @NotNull
+    private String loadVersion() {
+        try (java.io.InputStream is = getClass().getResourceAsStream("/version.properties")) {
+            if (is != null) {
+                java.util.Properties props = new java.util.Properties();
+                props.load(is);
+                String v = props.getProperty("version");
+                if (v != null && !v.trim().isEmpty() && !v.startsWith("${")) {
+                    return v.trim();
+                }
+            }
+        } catch (Exception e) {
+            // Fallback if properties file is missing or unreadable
+        }
+        return "unknown";
     }
 }

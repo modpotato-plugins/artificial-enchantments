@@ -28,12 +28,24 @@ public final class AnvilCombinationLogic {
 
     private final ItemStorage itemStorage;
 
+    /**
+     * Creates a new anvil combination logic instance.
+     *
+     * @param itemStorage the item storage for enchantment operations
+     */
     public AnvilCombinationLogic(@NotNull ItemStorage itemStorage) {
         this.itemStorage = Objects.requireNonNull(itemStorage, "itemStorage cannot be null");
     }
 
     /**
      * Result of an anvil combination operation.
+     *
+     * @param result the resulting item stack, or null if too expensive or no change
+     * @param cost the total anvil cost in experience levels
+     * @param newPriorWork the new prior work penalty for the result item
+     * @param tooExpensive whether the combination exceeds the maximum allowed cost
+     * @param appliedEnchantments map of enchantments applied to the result
+     * @param conflicts set of enchantments that conflicted and were not applied
      */
     public record CombinationResult(
             @Nullable ItemStack result,
@@ -43,6 +55,11 @@ public final class AnvilCombinationLogic {
             Map<EnchantmentDefinition, Integer> appliedEnchantments,
             Set<EnchantmentDefinition> conflicts
     ) {
+        /**
+         * Returns whether the combination was successful.
+         *
+         * @return true if a result item was produced and the cost was acceptable
+         */
         public boolean isSuccess() {
             return result != null && !tooExpensive;
         }

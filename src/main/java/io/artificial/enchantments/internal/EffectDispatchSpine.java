@@ -343,42 +343,53 @@ public final class EffectDispatchSpine {
      * {@link EnchantEffectEvent} subclasses.
      */
     public enum DispatchEventType {
-        // Combat events
+        /** Entity damaged by another entity. */
         ENTITY_DAMAGE_BY_ENTITY,
+        /** Entity damaged by any source. */
         ENTITY_DAMAGE,
+        /** Shield block event. */
         SHIELD_BLOCK,
 
-        // Tool events
+        /** Block broken by player. */
         BLOCK_BREAK,
+        /** Pre-break check for block breaking. */
         BLOCK_BREAK_PRE,
+        /** Block placed by player. */
         BLOCK_PLACE,
+        /** Player interacts with a block. */
         BLOCK_INTERACT,
 
-        // Interaction events
+        /** Player interacts with an entity. */
         ENTITY_INTERACT,
 
-        // Projectile events
+        /** Projectile launched. */
         PROJECTILE_LAUNCH,
+        /** Projectile hits a target. */
         PROJECTILE_HIT,
 
-        // Fishing events
+        /** Fishing rod action. */
         FISHING_ACTION,
 
-        // Tick events
+        /** Held item tick. */
         HELD_TICK,
+        /** Armor tick. */
         ARMOR_TICK,
 
-        // Item events
+        /** Item used. */
         ITEM_USED,
+        /** Durability damage taken. */
         DURABILITY_DAMAGE,
+        /** Item dropped. */
         ITEM_DROP,
+        /** Item picked up. */
         ITEM_PICKUP,
 
-        // Consumable events
+        /** Item consumed. */
         ITEM_CONSUME,
 
-        // Weapon events
+        /** Bow or crossbow shot. */
         BOW_SHOOT,
+        /** Trident thrown. */
         TRIDENT_THROW
     }
 }

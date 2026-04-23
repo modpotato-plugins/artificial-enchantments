@@ -97,6 +97,9 @@ tasks.processResources {
     filesMatching("plugin.yml") {
         expand(projectProps)
     }
+    filesMatching("version.properties") {
+        expand(projectProps)
+    }
 }
 
 // Shadow JAR configuration - shade all embedded dependencies to prevent conflicts

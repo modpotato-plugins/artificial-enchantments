@@ -29,6 +29,12 @@ import org.jetbrains.annotations.Nullable;
  */
 public class ArtificialEnchantmentsPlugin extends JavaPlugin {
 
+    /**
+     * Creates a new plugin instance.
+     */
+    public ArtificialEnchantmentsPlugin() {
+    }
+
     @Nullable
     private PacketEventsAdapter packetEventsAdapter;
 
@@ -41,6 +47,9 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
     @Nullable
     private ItemEnchantmentService itemEnchantmentService;
 
+    /**
+     * Enables the plugin, initializing the API and registering all listeners.
+     */
     @Override
     public void onEnable() {
         getLogger().info("Artificial Enchantments library enabled");
@@ -107,6 +116,9 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         getLogger().info("Enchantment effect listener registered");
     }
 
+    /**
+     * Disables the plugin, stopping all tasks and cleaning up resources.
+     */
     @Override
     public void onDisable() {
         if (tickTask != null) {

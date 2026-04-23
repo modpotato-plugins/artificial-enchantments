@@ -32,6 +32,12 @@ import java.util.List;
 public final class ContextFactory {
 
     /**
+     * Creates a new context factory.
+     */
+    public ContextFactory() {
+    }
+
+    /**
      * Creates the appropriate context for the given event type.
      *
      * @param eventType the type of event being dispatched

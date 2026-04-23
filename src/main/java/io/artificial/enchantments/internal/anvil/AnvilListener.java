@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.view.AnvilView;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -49,6 +50,15 @@ public final class AnvilListener implements Listener {
     private final AnvilCombinationLogic combinationLogic;
     private final Logger logger;
 
+    /**
+     * Creates a new AnvilListener.
+     *
+     * @param plugin the plugin instance
+     * @param itemStorage the item storage for enchantment data
+     * @param registryManager the enchantment registry manager
+     * @throws NullPointerException if any parameter is null
+     * @since 0.2.0
+     */
     public AnvilListener(
             @NotNull Plugin plugin,
             @NotNull ItemStorage itemStorage,
@@ -60,12 +70,19 @@ public final class AnvilListener implements Listener {
         this.logger = plugin.getLogger();
     }
 
+    /**
+     * Handles PrepareAnvilEvent to calculate custom enchantment combinations.
+     *
+     * @param event the prepare anvil event
+     * @since 0.2.0
+     */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPrepareAnvil(@NotNull PrepareAnvilEvent event) {
         AnvilInventory inventory = event.getInventory();
+        AnvilView view = event.getView();
         ItemStack first = inventory.getFirstItem();
         ItemStack second = inventory.getSecondItem();
-        String renameText = inventory.getRenameText();
+        String renameText = view.getRenameText();
 
         if (isEmpty(first) && isEmpty(second)) {
             return;
@@ -93,7 +110,7 @@ public final class AnvilListener implements Listener {
         }
 
         event.setResult(result.result());
-        inventory.setRepairCost(result.cost());
+        view.setRepairCost(result.cost());
     }
 
     @Nullable

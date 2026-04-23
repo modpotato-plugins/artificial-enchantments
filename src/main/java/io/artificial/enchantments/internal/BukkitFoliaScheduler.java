@@ -18,27 +18,48 @@ import java.util.function.Consumer;
  */
 public final class BukkitFoliaScheduler implements FoliaScheduler {
 
+    /**
+     * Creates a new Bukkit folia scheduler.
+     */
+    public BukkitFoliaScheduler() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void runGlobal(@NotNull Plugin plugin, @NotNull Runnable task) {
         Bukkit.getScheduler().runTask(plugin, task);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void runAtLocation(@NotNull Plugin plugin, @NotNull Location location, @NotNull Runnable task) {
         Bukkit.getScheduler().runTask(plugin, task);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void runAtEntity(@NotNull Plugin plugin, @NotNull Entity entity, @NotNull Runnable task) {
         Bukkit.getScheduler().runTask(plugin, task);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull ScheduledTask runGlobalDelayed(@NotNull Plugin plugin, @NotNull Runnable task, long delayTicks) {
         BukkitTask bukkitTask = Bukkit.getScheduler().runTaskLater(plugin, task, delayTicks);
         return new BukkitScheduledTask(bukkitTask);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull ScheduledTask runGlobalTimer(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long delayTicks, long periodTicks) {
         ScheduledTask[] wrapper = new ScheduledTask[1];
@@ -51,6 +72,9 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
         return wrapper[0];
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isPrimaryThread() {
         return Bukkit.isPrimaryThread();

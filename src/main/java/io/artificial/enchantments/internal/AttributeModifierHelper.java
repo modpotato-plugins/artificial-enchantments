@@ -1,11 +1,14 @@
 package io.artificial.enchantments.internal;
 
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -66,9 +69,9 @@ public final class AttributeModifierHelper {
 
         removeModifier(entity, attribute, uuid);
 
+        NamespacedKey key = new NamespacedKey("artificial_enchantments", uuid.toString());
         AttributeModifier modifier = new AttributeModifier(
-            uuid,
-            "artificial_enchantment_" + uuid.toString().substring(0, 8),
+            key,
             amount,
             operation
         );
@@ -95,8 +98,9 @@ public final class AttributeModifierHelper {
             return false;
         }
 
+        NamespacedKey key = new NamespacedKey("artificial_enchantments", uuid.toString());
         for (AttributeModifier modifier : instance.getModifiers()) {
-            if (modifier.getUniqueId().equals(uuid)) {
+            if (modifier.getKey().equals(key)) {
                 instance.removeModifier(modifier);
                 return true;
             }
@@ -116,14 +120,14 @@ public final class AttributeModifierHelper {
     public static int removeAllModifiers(@NotNull LivingEntity entity) {
         int removed = 0;
         
-        for (Attribute attribute : Attribute.values()) {
+        for (Attribute attribute : Registry.ATTRIBUTE) {
             AttributeInstance instance = entity.getAttribute(attribute);
             if (instance == null) {
                 continue;
             }
             
             for (AttributeModifier modifier : instance.getModifiers()) {
-                if (modifier.getName().startsWith("artificial_enchantment_")) {
+                if (modifier.getKey().getNamespace().equals("artificial_enchantments")) {
                     instance.removeModifier(modifier);
                     removed++;
                 }
@@ -189,12 +193,13 @@ public final class AttributeModifierHelper {
 
         removeItemModifier(item, attribute, uuid);
 
+        NamespacedKey key = new NamespacedKey("artificial_enchantments", uuid.toString());
+        EquipmentSlotGroup slotGroup = slot != null ? EquipmentSlotGroup.getByName(slot.name().toLowerCase()) : EquipmentSlotGroup.ANY;
         AttributeModifier modifier = new AttributeModifier(
-            uuid,
-            "artificial_enchantment_" + uuid.toString().substring(0, 8),
+            key,
             amount,
             operation,
-            slot
+            slotGroup
         );
         
         meta.addAttributeModifier(attribute, modifier);
@@ -225,8 +230,9 @@ public final class AttributeModifierHelper {
             return false;
         }
 
+        NamespacedKey key = new NamespacedKey("artificial_enchantments", uuid.toString());
         for (AttributeModifier modifier : meta.getAttributeModifiers(attribute)) {
-            if (modifier.getUniqueId().equals(uuid)) {
+            if (modifier.getKey().equals(key)) {
                 meta.removeAttributeModifier(attribute, modifier);
                 item.setItemMeta(meta);
                 return true;
@@ -389,7 +395,7 @@ public final class AttributeModifierHelper {
     public static Map<Attribute, java.util.List<UUID>> getActiveModifiers(@NotNull LivingEntity entity) {
         Map<Attribute, java.util.List<UUID>> result = new HashMap<>();
         
-        for (Attribute attribute : Attribute.values()) {
+        for (Attribute attribute : Registry.ATTRIBUTE) {
             AttributeInstance instance = entity.getAttribute(attribute);
             if (instance == null) {
                 continue;
@@ -397,8 +403,13 @@ public final class AttributeModifierHelper {
             
             java.util.List<UUID> uuids = new java.util.ArrayList<>();
             for (AttributeModifier modifier : instance.getModifiers()) {
-                if (modifier.getName().startsWith("artificial_enchantment_")) {
-                    uuids.add(modifier.getUniqueId());
+                if (modifier.getKey().getNamespace().equals("artificial_enchantments")) {
+                    String keyString = modifier.getKey().getKey();
+                    try {
+                        uuids.add(UUID.fromString(keyString));
+                    } catch (IllegalArgumentException e) {
+                        // Not a valid UUID format, skip
+                    }
                 }
             }
             
