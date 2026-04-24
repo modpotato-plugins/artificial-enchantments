@@ -769,11 +769,11 @@ prefs.setCustomLoreFormatter(context -> {
 
 ### Shared Plugin Model
 
-**Never shade this library.** Install `artificial-enchantments-1.0.0.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
+**Never shade this library.** Install `artificial-enchantments-1.0.1.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
 
 ```kotlin
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.0")
+    compileOnly("io.artificial:artificial-enchantments:1.0.1")
 }
 ```
 
