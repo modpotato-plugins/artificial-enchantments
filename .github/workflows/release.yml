@@ -163,18 +163,50 @@ jobs:
           body: |
             ## Installation
 
-            This artifact is published to **GitHub Packages**, which requires authentication even for public repositories.
+            ### Quick Start: JitPack (Recommended)
 
-            ### 1. Create a Personal Access Token (PAT)
+            No authentication required. JitPack builds automatically from GitHub tags.
 
-            1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
-            2. Click **Generate new token (classic)**
-            3. Select the `read:packages` scope
-            4. Generate and copy the token
+            **Gradle (Kotlin DSL):**
 
-            ### 2. Configure Credentials
+            ```kotlin
+            repositories {
+                mavenCentral()
+                maven { url = uri("https://jitpack.io") }
+            }
 
-            Add to your `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
+            dependencies {
+                compileOnly("com.github.modpotato-plugins:artificial-enchantments:${{ steps.bump_version.outputs.tag_version }}")
+            }
+            ```
+
+            **Maven:**
+
+            ```xml
+            <repositories>
+              <repository>
+                <id>jitpack.io</id>
+                <name>JitPack</name>
+                <url>https://jitpack.io</url>
+              </repository>
+            </repositories>
+
+            <dependency>
+              <groupId>com.github.modpotato-plugins</groupId>
+              <artifactId>artificial-enchantments</artifactId>
+              <version>${{ steps.bump_version.outputs.tag_version }}</version>
+              <scope>provided</scope>
+            </dependency>
+            ```
+
+            ### Official: GitHub Packages
+
+            Also published to GitHub Packages, which requires a PAT even for public repositories.
+
+            **1. Create a PAT** with the `read:packages` scope:
+            GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+            **2. Configure credentials** in `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
 
             ```properties
             gpr.user=YOUR_GITHUB_USERNAME
@@ -188,7 +220,7 @@ jobs:
             export GITHUB_TOKEN=YOUR_PAT_TOKEN
             ```
 
-            ### 3. Add the Repository
+            **3. Add the repository and dependency:**
 
             **Gradle (Kotlin DSL):**
 
@@ -204,6 +236,10 @@ jobs:
                     }
                 }
             }
+
+            dependencies {
+                compileOnly("io.artificial:artificial-enchantments:${{ steps.bump_version.outputs.new_version }}")
+            }
             ```
 
             **Maven:**
@@ -216,21 +252,7 @@ jobs:
                 <url>https://maven.pkg.github.com/modpotato-plugins/artificial-enchantments</url>
               </repository>
             </repositories>
-            ```
 
-            ### 4. Add the Dependency
-
-            **Gradle (Kotlin DSL):**
-
-            ```kotlin
-            dependencies {
-                compileOnly("io.artificial:artificial-enchantments:${{ steps.bump_version.outputs.new_version }}")
-            }
-            ```
-
-            **Maven:**
-
-            ```xml
             <dependency>
               <groupId>io.artificial</groupId>
               <artifactId>artificial-enchantments</artifactId>

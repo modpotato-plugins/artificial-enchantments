@@ -29,19 +29,38 @@ All examples assume you have a `plugin` variable (your `JavaPlugin` instance) an
 
 ### Repository Setup
 
-Artifacts are published to **GitHub Packages**, which requires authentication even for public repositories.
+#### Quick Start: JitPack (Recommended)
 
-1. **Create a Personal Access Token (PAT)** with the `read:packages` scope:
-   GitHub Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token
+The easiest way — no authentication required.
 
-2. **Configure credentials** in `~/.gradle/gradle.properties` (global) or your project's `gradle.properties`:
+```kotlin
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.0")
+}
+```
+
+That's it. JitPack builds automatically from GitHub tags.
+
+#### Official: GitHub Packages
+
+If you prefer the official GitHub Packages registry, it requires authentication even for public repositories.
+
+1. **Create a PAT** with the `read:packages` scope:
+   GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+2. **Configure credentials** in `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
 
 ```properties
 gpr.user=YOUR_GITHUB_USERNAME
 gpr.key=YOUR_PAT_TOKEN
 ```
 
-3. **Add the repository** to your `build.gradle` / `build.gradle.kts`:
+3. **Add the repository and dependency:**
 
 ```kotlin
 repositories {
@@ -55,11 +74,7 @@ repositories {
         }
     }
 }
-```
 
-4. **Add the dependency**:
-
-```kotlin
 dependencies {
     compileOnly("io.artificial:artificial-enchantments:1.0.0")
 }

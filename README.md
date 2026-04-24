@@ -35,18 +35,33 @@ cp artificial-enchantments-1.0.0.jar /path/to/server/plugins/
 
 Add as a `compileOnly` dependency. **Do NOT shade this library** — see [Multi-Plugin Usage](#multi-plugin-usage) for why.
 
-Artifacts are published to **GitHub Packages**, which requires authentication even for public repositories.
+#### Quick Start: JitPack (Recommended)
 
-#### 1. Create a Personal Access Token (PAT)
+The easiest way — no authentication required.
 
-1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
-2. Click **Generate new token (classic)**
-3. Select the `read:packages` scope
-4. Generate and copy the token
+`build.gradle` / `build.gradle.kts`:
 
-#### 2. Configure Credentials
+```kotlin
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
 
-Add to your `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
+dependencies {
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.0")
+}
+```
+
+That's it. JitPack builds automatically from GitHub tags.
+
+#### Official: GitHub Packages
+
+If you prefer the official GitHub Packages registry, it requires a Personal Access Token (PAT) even for public repositories.
+
+**1. Create a PAT** with the `read:packages` scope:
+GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+**2. Configure credentials** in `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
 
 ```properties
 gpr.user=YOUR_GITHUB_USERNAME
@@ -60,9 +75,7 @@ export GITHUB_ACTOR=YOUR_GITHUB_USERNAME
 export GITHUB_TOKEN=YOUR_PAT_TOKEN
 ```
 
-#### 3. Add the Repository
-
-`build.gradle` / `build.gradle.kts`:
+**3. Add the repository and dependency:**
 
 ```kotlin
 repositories {
@@ -76,13 +89,7 @@ repositories {
         }
     }
 }
-```
 
-#### 4. Add the Dependency
-
-`build.gradle` / `build.gradle.kts`:
-
-```kotlin
 dependencies {
     compileOnly("io.artificial:artificial-enchantments:1.0.0")
 }
