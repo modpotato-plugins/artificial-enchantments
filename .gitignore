@@ -65,7 +65,7 @@ hs_err_pid*
 *.pid.lock
 
 # Sisyphus state (local only)
-.sisyphus/boulder.json
+.sisyphus/
 
 # Build output (but keep build/libs for releases if needed locally)
 # Actually, exclude all build output
