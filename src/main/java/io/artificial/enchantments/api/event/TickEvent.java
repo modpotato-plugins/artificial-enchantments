@@ -9,6 +9,12 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Event fired periodically when an enchanted item is held or worn as armor.
+ *
+ * <p>Carries data about the player, item, slot, and held duration during
+ * periodic tick events. This event is not cancellable.
+ *
+ * @see EnchantEffectEvent
+ * @since 0.1.0
  */
 public class TickEvent extends EnchantEffectEvent {
 
@@ -22,6 +28,20 @@ public class TickEvent extends EnchantEffectEvent {
     private final int tickCount;
     private final long heldDuration;
 
+    /**
+     * Creates a new {@code TickEvent}.
+     *
+     * @param enchantment the enchantment that triggered this event
+     * @param level the level of the enchantment
+     * @param scaledValue the scaled value from the enchantment's scaling algorithm
+     * @param player the player holding or wearing the item
+     * @param item the enchanted item
+     * @param slot the equipment slot
+     * @param isHeld true if the item is being held in hand
+     * @param isArmor true if the item is worn as armor
+     * @param tickCount the tick counter
+     * @param heldDuration the duration the item has been held in ticks
+     */
     public TickEvent(
             @NotNull EnchantmentDefinition enchantment,
             int level,
@@ -44,33 +64,68 @@ public class TickEvent extends EnchantEffectEvent {
         this.heldDuration = heldDuration;
     }
 
+    /**
+     * Gets the player holding or wearing the item.
+     *
+     * @return the player
+     */
     @NotNull
     public Player getPlayer() {
         return player;
     }
 
+    /**
+     * Gets the enchanted item.
+     *
+     * @return the item
+     */
     @NotNull
     public ItemStack getItem() {
         return item;
     }
 
+    /**
+     * Gets the equipment slot.
+     *
+     * @return the slot
+     */
     @NotNull
     public EquipmentSlot getSlot() {
         return slot;
     }
 
+    /**
+     * Checks if the item is being held in hand.
+     *
+     * @return true if held
+     */
     public boolean isHeld() {
         return isHeld;
     }
 
+    /**
+     * Checks if the item is worn as armor.
+     *
+     * @return true if armor
+     */
     public boolean isArmor() {
         return isArmor;
     }
 
+    /**
+     * Gets the tick counter.
+     *
+     * @return the tick count
+     */
     public int getTickCount() {
         return tickCount;
     }
 
+    /**
+     * Gets the duration the item has been held in ticks.
+     *
+     * @return the held duration
+     */
     public long getHeldDuration() {
         return heldDuration;
     }
@@ -81,6 +136,11 @@ public class TickEvent extends EnchantEffectEvent {
         return HANDLERS;
     }
 
+    /**
+     * Gets the handler list for this event type.
+     *
+     * @return the handler list
+     */
     @NotNull
     public static HandlerList getHandlerList() {
         return HANDLERS;

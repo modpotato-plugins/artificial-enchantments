@@ -28,6 +28,14 @@ public class PaperEnchantmentBootstrap implements PluginBootstrap {
 
     private static final Logger LOGGER = Logger.getLogger("ArtificialEnchantments");
 
+    /**
+     * Creates a new Paper enchantment bootstrap.
+     *
+     * @since 0.2.0
+     */
+    public PaperEnchantmentBootstrap() {
+    }
+
     @Override
     public void bootstrap(@NotNull BootstrapContext context) {
         LOGGER.info("[ArtificialEnchantments] Initializing Paper native enchantment bootstrap...");

@@ -30,6 +30,14 @@ import java.util.function.Function;
  */
 public final class EnchantmentDefinitionBuilder implements EnchantmentDefinition.Builder {
 
+    /**
+     * Creates a new enchantment definition builder.
+     *
+     * @since 0.2.0
+     */
+    public EnchantmentDefinitionBuilder() {
+    }
+
     private NamespacedKey key;
     private Component displayName;
     private LevelScaling scaling;

@@ -6,10 +6,12 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Exponential decay scaling formula.
  * 
- * Formula: maxValue * (1 - decayFactor^level)
+ * <p>Formula: maxValue * (1 - decayFactor^level)
  * 
- * This formula approaches maxValue asymptotically from below as level increases,
+ * <p>This formula approaches maxValue asymptotically from below as level increases,
  * using exponential decay. The decayFactor controls how quickly the value approaches max.
+ *
+ * @since 0.2.0
  */
 final class DecayingScaling implements LevelScaling {
 

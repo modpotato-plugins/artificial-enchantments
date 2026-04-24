@@ -18,6 +18,29 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Generates enchantment offers for the enchantment table.
+ * <p>
+ * This class handles the generation of custom enchantment offers based on:
+ * <ul>
+ *   <li>Enchantment rarity weights (common, uncommon, rare, very rare)</li>
+ *   <li>Table power level (number of bookshelves)</li>
+ *   <li>Item material applicability</li>
+ *   <li>Enchantment configuration (min/max bookshelves, cost multipliers)</li>
+ *   <li>Conflict detection with vanilla and other custom enchantments</li>
+ * </ul>
+ * <p>
+ * <strong>Offer Generation:</strong>
+ * <ol>
+ *   <li>Filter enchantments by discoverability and bookshelf range</li>
+ *   <li>Calculate weighted probability for each eligible enchantment</li>
+ *   <li>Randomly select enchantments for each slot</li>
+ *   <li>Determine level based on power, slot position, and random factor</li>
+ *   <li>Calculate cost based on level, rarity, and configuration</li>
+ * </ol>
+ *
+ * @since 0.2.0
+ */
 public final class EnchantOfferGenerator {
 
     private static final int WEIGHT_COMMON = 10;
@@ -30,10 +53,30 @@ public final class EnchantOfferGenerator {
 
     private final EnchantmentRegistryManager registryManager;
 
+    /**
+     * Creates a new offer generator.
+     *
+     * @param registryManager the enchantment registry for looking up definitions
+     * @throws NullPointerException if registryManager is null
+     * @since 0.2.0
+     */
     public EnchantOfferGenerator(@NotNull EnchantmentRegistryManager registryManager) {
         this.registryManager = registryManager;
     }
 
+    /**
+     * Generates custom enchantment offers for an item.
+     * <p>
+     * Creates up to 3 offers based on the item type, table power, and
+     * existing vanilla enchantments. Each offer includes the enchantment
+     * definition, calculated level, cost, and configuration.
+     *
+     * @param item the item being enchanted
+     * @param power the enchantment table power (number of bookshelves)
+     * @param existingOffers set of vanilla enchantments already offered
+     * @return list of generated custom offers (may be empty)
+     * @since 0.2.0
+     */
     @NotNull
     public List<GeneratedOffer> generateOffers(
             @NotNull ItemStack item,
@@ -78,6 +121,18 @@ public final class EnchantOfferGenerator {
         return offers;
     }
 
+    /**
+     * Gets all eligible enchantments for the given item and power level.
+     * <p>
+     * Filters enchantments by discoverability, bookshelf range, treasure status,
+     * and conflicts with vanilla enchantments already in the offer array.
+     *
+     * @param item the item being enchanted
+     * @param power the table power level
+     * @param existingVanilla set of vanilla enchantments already offered
+     * @return set of eligible custom enchantment definitions
+     * @since 0.2.0
+     */
     @NotNull
     private Set<EnchantmentDefinition> getEligibleEnchantments(
             @NotNull ItemStack item,
@@ -111,6 +166,14 @@ public final class EnchantOfferGenerator {
         return candidates;
     }
 
+    /**
+     * Checks if an enchantment conflicts with any vanilla enchantments.
+     *
+     * @param definition the custom enchantment definition
+     * @param vanillaOffers set of vanilla enchantments to check against
+     * @return true if there's a conflict
+     * @since 0.2.0
+     */
     private boolean hasConflictWithVanilla(
             @NotNull EnchantmentDefinition definition,
             @NotNull Set<Enchantment> vanillaOffers
@@ -124,6 +187,18 @@ public final class EnchantOfferGenerator {
         return false;
     }
 
+    /**
+     * Filters available enchantments for the next slot.
+     * <p>
+     * Removes enchantments already used and those conflicting with used enchantments.
+     * Also filters by applicability to the specific item.
+     *
+     * @param candidates the pool of eligible enchantments
+     * @param used set of enchantment keys already used in previous slots
+     * @param item the item being enchanted
+     * @return list of available enchantments for this slot
+     * @since 0.2.0
+     */
     @NotNull
     private List<EnchantmentDefinition> filterAvailable(
             @NotNull Set<EnchantmentDefinition> candidates,
@@ -157,6 +232,19 @@ public final class EnchantOfferGenerator {
         return available;
     }
 
+    /**
+     * Generates an offer for a specific slot.
+     * <p>
+     * Uses weighted random selection based on rarity weights. The selected
+     * enchantment's level and cost are calculated based on power level and
+     * slot position (higher slots generally offer better enchantments).
+     *
+     * @param available list of available enchantments for this slot
+     * @param power the table power level
+     * @param slotIndex the slot index (0-2)
+     * @return the generated offer, or null if no offer could be generated
+     * @since 0.2.0
+     */
     private GeneratedOffer generateOfferForSlot(
             @NotNull List<EnchantmentDefinition> available,
             int power,
@@ -191,6 +279,16 @@ public final class EnchantOfferGenerator {
         return new GeneratedOffer(selected, level, cost, config);
     }
 
+    /**
+     * Calculates the selection weight for an enchantment.
+     * <p>
+     * Base weights are: COMMON=10, UNCOMMON=5, RARE=2, VERY_RARE=1.
+     * The weight multiplier from configuration is applied to adjust rarity.
+     *
+     * @param definition the enchantment definition
+     * @return the calculated weight for random selection
+     * @since 0.2.0
+     */
     private int calculateWeight(@NotNull EnchantmentDefinition definition) {
         int baseWeight;
         switch (definition.getRarity()) {
@@ -205,6 +303,19 @@ public final class EnchantOfferGenerator {
         return (int) (baseWeight * config.getWeightMultiplier());
     }
 
+    /**
+     * Determines the enchantment level for an offer.
+     * <p>
+     * Level is based on slot position (higher slots get better multipliers),
+     * table power, and a random factor. Respects enchantment min/max levels
+     * and table configuration limits.
+     *
+     * @param definition the enchantment definition
+     * @param power the table power level
+     * @param slotIndex the slot index (0-2)
+     * @return the determined level
+     * @since 0.2.0
+     */
     private int determineLevel(
             @NotNull EnchantmentDefinition definition,
             int power,
@@ -231,6 +342,18 @@ public final class EnchantOfferGenerator {
         return Math.max(minLevel, Math.min(maxLevel, scaledMax));
     }
 
+    /**
+     * Calculates the lapis/level cost for an enchantment offer.
+     * <p>
+     * Base cost depends on table power tier. Level multiplier adds 15% per level.
+     * Cost multiplier from configuration is applied. Result is clamped to 1-30.
+     *
+     * @param definition the enchantment definition
+     * @param level the offer level
+     * @param power the table power level
+     * @return the calculated cost in levels
+     * @since 0.2.0
+     */
     private int calculateCost(
             @NotNull EnchantmentDefinition definition,
             int level,
@@ -256,17 +379,46 @@ public final class EnchantOfferGenerator {
         return Math.max(1, Math.min(30, cost));
     }
 
+    /**
+     * Gets the table configuration for an enchantment.
+     * <p>
+     * Currently returns default configuration. Future versions may support
+     * per-enchantment custom configurations.
+     *
+     * @param definition the enchantment definition
+     * @return the table configuration for this enchantment
+     * @since 0.2.0
+     */
     @NotNull
     private EnchantTableConfiguration getTableConfiguration(@NotNull EnchantmentDefinition definition) {
         return EnchantTableConfiguration.defaults();
     }
 
+    /**
+     * Record representing a generated enchantment offer.
+     * <p>
+     * Contains the enchantment definition, calculated level, cost, and
+     * configuration used for this offer.
+     *
+     * @param definition the enchantment definition
+     * @param level the generated level
+     * @param cost the cost in experience levels
+     * @param configuration the table configuration used
+     * @since 0.2.0
+     */
     public record GeneratedOffer(
             @NotNull EnchantmentDefinition definition,
             int level,
             int cost,
             @NotNull EnchantTableConfiguration configuration
     ) {
+        /**
+         * Converts this generated offer to a Bukkit EnchantmentOffer.
+         *
+         * @param enchantment the native Bukkit enchantment
+         * @return the Bukkit enchantment offer
+         * @since 0.2.0
+         */
         @NotNull
         public org.bukkit.enchantments.EnchantmentOffer toBukkitOffer(@NotNull Enchantment enchantment) {
             return new org.bukkit.enchantments.EnchantmentOffer(enchantment, level, cost);

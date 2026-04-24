@@ -16,6 +16,17 @@ import java.util.Set;
 /**
  * Bridge between the library's enchantment registry and Paper's native
  * enchantment registry. Provides bidirectional lookup and validation.
+ * 
+ * <p>This class enables seamless interoperability between the library's
+ * {@link EnchantmentDefinition} format and Paper's native {@link Enchantment}
+ * registry. It handles:
+ * <ul>
+ *   <li>Bidirectional lookup between library and native enchantments</li>
+ *   <li>Registration coordination between internal and native registries</li>
+ *   <li>Validation of native registration status</li>
+ * </ul>
+ *
+ * @since 0.2.0
  */
 public final class PaperRegistryBridge {
 
@@ -28,6 +39,11 @@ public final class PaperRegistryBridge {
         this.internalRegistry = EnchantmentRegistryManager.getInstance();
     }
 
+    /**
+     * Gets the singleton instance of the registry bridge.
+     *
+     * @return the shared PaperRegistryBridge instance
+     */
     @NotNull
     public static PaperRegistryBridge getInstance() {
         if (instance == null) {
@@ -42,6 +58,9 @@ public final class PaperRegistryBridge {
 
     /**
      * Gets a library EnchantmentDefinition by its key.
+     *
+     * @param key the enchantment's namespaced key
+     * @return optional containing the definition, or empty if not found
      */
     @NotNull
     public Optional<EnchantmentDefinition> getDefinition(@NotNull NamespacedKey key) {
@@ -50,6 +69,11 @@ public final class PaperRegistryBridge {
 
     /**
      * Gets the native Paper Enchantment by its key.
+     * 
+     * <p>Returns null if the enchantment hasn't been registered to the native registry yet.
+     *
+     * @param key the enchantment's namespaced key
+     * @return the native Paper Enchantment, or null if not yet registered
      */
     @Nullable
     public Enchantment getNativeEnchantment(@NotNull NamespacedKey key) {
@@ -66,6 +90,9 @@ public final class PaperRegistryBridge {
 
     /**
      * Checks if an enchantment is registered in the native Paper registry.
+     *
+     * @param key the enchantment's namespaced key
+     * @return true if registered in the native Paper registry
      */
     public boolean isNativeRegistered(@NotNull NamespacedKey key) {
         return internalRegistry.isNativeRegistered(key);
@@ -73,6 +100,8 @@ public final class PaperRegistryBridge {
 
     /**
      * Gets all registered enchantment definitions.
+     *
+     * @return unmodifiable collection of all enchantment definitions
      */
     @NotNull
     public Collection<EnchantmentDefinition> getAllDefinitions() {
@@ -81,6 +110,9 @@ public final class PaperRegistryBridge {
 
     /**
      * Gets all enchantments applicable to a specific material.
+     *
+     * @param material the material to check
+     * @return unmodifiable set of applicable enchantment definitions
      */
     @NotNull
     public Set<EnchantmentDefinition> getEnchantmentsForMaterial(@NotNull org.bukkit.Material material) {
@@ -90,6 +122,11 @@ public final class PaperRegistryBridge {
     /**
      * Registers an enchantment definition with both the internal registry
      * and prepares it for native Paper registration.
+     * 
+     * <p>Returns false if the enchantment is already native-registered.
+     *
+     * @param definition the enchantment definition to register
+     * @return true if registered successfully, false if already native-registered
      */
     public boolean registerEnchantment(@NotNull EnchantmentDefinition definition) {
         if (internalRegistry.isNativeRegistered(definition.getKey())) {
@@ -100,8 +137,13 @@ public final class PaperRegistryBridge {
     }
 
     /**
-     * Unregisters an enchantment. Note: Native unregistration is not
-     * fully supported by Paper, so this only removes from internal tracking.
+     * Unregisters an enchantment from the internal tracking.
+     * 
+     * <p>Note: Native unregistration is not fully supported by Paper once the
+     * registry is frozen. This only removes from internal tracking.
+     *
+     * @param key the enchantment's namespaced key
+     * @return true if unregistered, false if not found
      */
     public boolean unregisterEnchantment(@NotNull NamespacedKey key) {
         return internalRegistry.unregister(key);
@@ -109,6 +151,9 @@ public final class PaperRegistryBridge {
 
     /**
      * Converts a native Paper Enchantment to the library's EnchantmentDefinition.
+     *
+     * @param enchantment the native Paper Enchantment
+     * @return the library EnchantmentDefinition, or null if not found
      */
     @Nullable
     public EnchantmentDefinition fromNative(@NotNull Enchantment enchantment) {
@@ -117,6 +162,9 @@ public final class PaperRegistryBridge {
 
     /**
      * Gets the native Paper Enchantment for a library definition.
+     *
+     * @param definition the library enchantment definition
+     * @return the native Paper Enchantment, or null if not yet registered
      */
     @Nullable
     public Enchantment toNative(@NotNull EnchantmentDefinition definition) {

@@ -40,6 +40,14 @@ import org.jetbrains.annotations.NotNull;
 public final class TypedCallbackDispatcher {
 
     /**
+     * Creates a new typed callback dispatcher.
+     *
+     * @since 0.2.0
+     */
+    public TypedCallbackDispatcher() {
+    }
+
+    /**
      * Dispatches an effect to the appropriate handler method based on event type.
      *
      * @param handler the effect handler to invoke

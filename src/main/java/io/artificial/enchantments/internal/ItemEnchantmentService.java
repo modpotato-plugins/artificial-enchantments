@@ -31,6 +31,13 @@ public class ItemEnchantmentService {
     private final ItemStorage itemStorage;
     private final EnchantmentRegistryManager registryManager;
 
+    /**
+     * Creates a new item enchantment service.
+     *
+     * @param itemStorage the item storage implementation for applying/removing enchantments
+     * @param registryManager the registry manager for looking up enchantment definitions
+     * @since 0.1.0
+     */
     public ItemEnchantmentService(
             @NotNull ItemStorage itemStorage,
             @NotNull EnchantmentRegistryManager registryManager) {

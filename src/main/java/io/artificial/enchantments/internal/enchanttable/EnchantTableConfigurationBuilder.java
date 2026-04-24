@@ -4,9 +4,40 @@ import io.artificial.enchantments.api.enchanttable.EnchantTableConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Builder implementation for EnchantTableConfiguration.
+ * Builder implementation for {@link EnchantTableConfiguration}.
+ * <p>
+ * This builder allows configuring all aspects of how an enchantment appears
+ * in the enchantment table:
+ * <ul>
+ *   <li>Weight multiplier - affects selection probability relative to rarity</li>
+ *   <li>Bookshelf range - min/max bookshelves required to appear</li>
+ *   <li>Cost multiplier - scales the lapis/level cost</li>
+ *   <li>Multiple offers - whether this enchantment can appear in multiple slots</li>
+ *   <li>Level clamping - min/max levels that can be offered</li>
+ *   <li>Treasure flag - whether this is a treasure-only enchantment</li>
+ * </ul>
+ * <p>
+ * Default values follow vanilla behavior:
+ * <ul>
+ *   <li>Weight multiplier: 1.0 (no adjustment)</li>
+ *   <li>Bookshelves: 0-15 (available at all power levels)</li>
+ *   <li>Cost multiplier: 1.0 (vanilla scaling)</li>
+ *   <li>Single offer per enchantment</li>
+ *   <li>Level range: 1 to enchantment max level</li>
+ *   <li>Non-treasure (discoverable)</li>
+ * </ul>
+ *
+ * @since 0.2.0
  */
 public final class EnchantTableConfigurationBuilder implements EnchantTableConfiguration.Builder {
+
+    /**
+     * Creates a new enchantment table configuration builder.
+     *
+     * @since 0.2.0
+     */
+    public EnchantTableConfigurationBuilder() {
+    }
 
     private double weightMultiplier = 1.0;
     private int minBookshelves = 0;
@@ -17,6 +48,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
     private int tableMaxLevel = Integer.MAX_VALUE;
     private boolean treasure = false;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder weightMultiplier(double multiplier) {
@@ -27,6 +61,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder minBookshelves(int min) {
@@ -37,6 +74,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder maxBookshelves(int max) {
@@ -47,6 +87,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder costMultiplier(double multiplier) {
@@ -57,6 +100,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder allowMultiple(boolean allow) {
@@ -64,6 +110,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder tableMinLevel(int level) {
@@ -74,6 +123,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder tableMaxLevel(int level) {
@@ -84,6 +136,9 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration.Builder treasure(boolean treasure) {
@@ -91,6 +146,17 @@ public final class EnchantTableConfigurationBuilder implements EnchantTableConfi
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Validates constraints before building:
+     * <ul>
+     *   <li>minBookshelves must not exceed maxBookshelves</li>
+     *   <li>tableMinLevel must not exceed tableMaxLevel</li>
+     * </ul>
+     *
+     * @throws IllegalStateException if constraints are violated
+     */
     @Override
     @NotNull
     public EnchantTableConfiguration build() {

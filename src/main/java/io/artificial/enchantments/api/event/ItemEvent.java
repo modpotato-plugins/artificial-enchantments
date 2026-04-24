@@ -9,7 +9,13 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Event fired when an enchantment effect triggers during item usage, drop, pickup, or durability change.
+ * Event fired when an item-related enchantment effect triggers.
+ *
+ * <p>Carries data about the player, item, durability, and action type during
+ * item drop, pickup, or durability change events. This event is cancellable.
+ *
+ * @see EnchantEffectEvent
+ * @since 0.1.0
  */
 public class ItemEvent extends EnchantEffectEvent implements Cancellable {
 
@@ -25,6 +31,21 @@ public class ItemEvent extends EnchantEffectEvent implements Cancellable {
     private int damageTaken;
     private boolean cancelled;
 
+    /**
+     * Creates a new {@code ItemEvent}.
+     *
+     * @param enchantment the enchantment that triggered this event
+     * @param level the level of the enchantment
+     * @param scaledValue the scaled value from the enchantment's scaling algorithm
+     * @param player the player associated with the item
+     * @param item the item
+     * @param slot the equipment slot
+     * @param isDrop true if this is a drop event
+     * @param isPickup true if this is a pickup event
+     * @param currentDurability the current durability
+     * @param maxDurability the maximum durability
+     * @param damageTaken the damage taken
+     */
     public ItemEvent(
             @NotNull EnchantmentDefinition enchantment,
             int level,
@@ -50,57 +71,122 @@ public class ItemEvent extends EnchantEffectEvent implements Cancellable {
         this.cancelled = false;
     }
 
+    /**
+     * Gets the player associated with the item.
+     *
+     * @return the player
+     */
     @NotNull
     public Player getPlayer() {
         return player;
     }
 
+    /**
+     * Gets the item.
+     *
+     * @return the item
+     */
     @NotNull
     public ItemStack getItem() {
         return item;
     }
 
+    /**
+     * Gets the equipment slot.
+     *
+     * @return the slot
+     */
     @NotNull
     public EquipmentSlot getSlot() {
         return slot;
     }
 
+    /**
+     * Checks if this is a drop event.
+     *
+     * @return true if drop
+     */
     public boolean isDrop() {
         return isDrop;
     }
 
+    /**
+     * Checks if this is a pickup event.
+     *
+     * @return true if pickup
+     */
     public boolean isPickup() {
         return isPickup;
     }
 
+    /**
+     * Gets the current durability.
+     *
+     * @return the current durability
+     */
     public int getCurrentDurability() {
         return currentDurability;
     }
 
+    /**
+     * Gets the maximum durability.
+     *
+     * @return the maximum durability
+     */
     public int getMaxDurability() {
         return maxDurability;
     }
 
+    /**
+     * Gets the damage taken.
+     *
+     * @return the damage taken
+     */
     public int getDamageTaken() {
         return damageTaken;
     }
 
+    /**
+     * Sets the damage taken.
+     *
+     * @param damageTaken the new damage taken (clamped to non-negative)
+     */
     public void setDamageTaken(int damageTaken) {
         this.damageTaken = Math.max(0, damageTaken);
     }
 
+    /**
+     * Reduces the damage taken by the specified amount.
+     *
+     * @param amount the amount to reduce
+     */
     public void reduceDamage(int amount) {
         this.damageTaken = Math.max(0, this.damageTaken - amount);
     }
 
+    /**
+     * Checks if the item will break from the damage.
+     *
+     * @return true if the item will break
+     */
     public boolean willBreak() {
         return currentDurability - damageTaken <= 0;
     }
 
+    /**
+     * Checks if this is a crafting ingredient.
+     *
+     * @return true if crafting ingredient
+     */
     public boolean isCraftingIngredient() {
         return false;
     }
 
+    /**
+     * Checks if this is an anvil combination.
+     *
+     * @return true if anvil combination
+     */
     public boolean isAnvilCombination() {
         return false;
     }
@@ -121,6 +207,11 @@ public class ItemEvent extends EnchantEffectEvent implements Cancellable {
         return HANDLERS;
     }
 
+    /**
+     * Gets the handler list for this event type.
+     *
+     * @return the handler list
+     */
     @NotNull
     public static HandlerList getHandlerList() {
         return HANDLERS;

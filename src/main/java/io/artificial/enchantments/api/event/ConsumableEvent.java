@@ -10,7 +10,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Event fired when an enchantment effect triggers during item consumption.
+ * Event fired when a consumable-related enchantment effect triggers.
+ *
+ * <p>Carries data about the player, item, and consumption values during
+ * item consumption events. This event is cancellable.
+ *
+ * @see EnchantEffectEvent
+ * @since 0.1.0
  */
 public class ConsumableEvent extends EnchantEffectEvent implements Cancellable {
 

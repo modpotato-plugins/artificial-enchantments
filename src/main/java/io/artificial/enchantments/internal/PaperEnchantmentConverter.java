@@ -19,8 +19,22 @@ import java.util.stream.Collectors;
 /**
  * Converts library EnchantmentDefinition instances to Paper's native
  * EnchantmentRegistryEntry.Builder format for registration during bootstrap.
+ * 
+ * <p>This utility class bridges the library's enchantment definition format with
+ * Paper 1.21+'s native registry system. It handles conversion of properties
+ * like description, rarity, costs, supported items, and exclusive conflicts.
+ *
+ * @since 0.2.0
  */
 public final class PaperEnchantmentConverter {
+
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     *
+     * @since 0.2.0
+     */
+    private PaperEnchantmentConverter() {
+    }
 
     /**
      * Configures a Paper EnchantmentRegistryEntry.Builder from an EnchantmentDefinition.

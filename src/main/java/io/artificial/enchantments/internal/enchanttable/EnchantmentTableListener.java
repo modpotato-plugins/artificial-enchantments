@@ -22,6 +22,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Listener for enchantment table events to enable custom enchantment support.
+ * <p>
+ * Hooks into PrepareItemEnchantEvent to generate and inject custom enchantment
+ * offers alongside vanilla offers. Also handles EnchantItemEvent to apply
+ * selected custom enchantments to the item being enchanted.
+ * <p>
+ * <strong>Processing Flow:</strong>
+ * <ol>
+ *   <li>Player places item in enchantment table</li>
+ *   <li>{@link #onPrepareItemEnchant} generates custom offers based on power (bookshelves)</li>
+ *   <li>Custom offers are injected into empty slots of the offer array</li>
+ *   <li>Player selects an offer and enchants the item</li>
+ *   <li>{@link #onEnchantItem} extracts custom enchantments and applies them</li>
+ * </ol>
+ *
+ * @since 0.2.0
+ */
 public final class EnchantmentTableListener implements Listener {
 
     private final Plugin plugin;
@@ -30,6 +48,15 @@ public final class EnchantmentTableListener implements Listener {
     private final PaperRegistryBridge registryBridge;
     private final Logger logger;
 
+    /**
+     * Creates a new enchantment table listener.
+     *
+     * @param plugin the plugin instance
+     * @param registryManager the enchantment registry manager
+     * @param registryBridge the bridge to native Paper enchantments
+     * @throws NullPointerException if any parameter is null
+     * @since 0.2.0
+     */
     public EnchantmentTableListener(
             @NotNull Plugin plugin,
             @NotNull EnchantmentRegistryManager registryManager,
@@ -42,6 +69,16 @@ public final class EnchantmentTableListener implements Listener {
         this.logger = plugin.getLogger();
     }
 
+    /**
+     * Handles PrepareItemEnchantEvent to generate and inject custom enchantment offers.
+     * <p>
+     * This method is called when a player places an item in the enchantment table.
+     * It generates custom enchantment offers based on the table's power level
+     * (number of bookshelves) and injects them into empty slots of the offer array.
+     *
+     * @param event the prepare item enchant event
+     * @since 0.2.0
+     */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPrepareItemEnchant(@NotNull PrepareItemEnchantEvent event) {
         ItemStack item = event.getItem();
@@ -65,6 +102,16 @@ public final class EnchantmentTableListener implements Listener {
         injectOffersIntoSlots(existingOffers, customOffers);
     }
 
+    /**
+     * Handles EnchantItemEvent to apply selected custom enchantments to the item.
+     * <p>
+     * This method is called when a player selects an enchantment offer and clicks
+     * to enchant the item. It extracts any custom enchantments from the enchantment
+     * map and applies them to the resulting item using unsafe enchantments.
+     *
+     * @param event the enchant item event
+     * @since 0.2.0
+     */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEnchantItem(@NotNull EnchantItemEvent event) {
         ItemStack item = event.getItem();
@@ -82,6 +129,16 @@ public final class EnchantmentTableListener implements Listener {
         applyCustomEnchantmentsToItem(item, customEnchants);
     }
 
+    /**
+     * Extracts vanilla enchantments from the current offer array.
+     * <p>
+     * Used to track which vanilla enchantments are already present
+     * to avoid generating conflicting custom offers.
+     *
+     * @param offers the array of enchantment offers
+     * @return set of vanilla enchantments currently offered
+     * @since 0.2.0
+     */
     @NotNull
     private Set<Enchantment> extractVanillaEnchantments(@NotNull EnchantmentOffer[] offers) {
         Set<Enchantment> enchantments = new HashSet<>();
@@ -93,6 +150,17 @@ public final class EnchantmentTableListener implements Listener {
         return enchantments;
     }
 
+    /**
+     * Injects custom offers into empty slots of the offer array.
+     * <p>
+     * Iterates through custom offers and places them in the first available
+     * null slot in the offer array. Skips offers if the native enchantment
+     * cannot be found in the Paper registry.
+     *
+     * @param slots the offer array to inject into
+     * @param customOffers the list of generated custom offers
+     * @since 0.2.0
+     */
     private void injectOffersIntoSlots(
             @NotNull EnchantmentOffer[] slots,
             @NotNull List<EnchantOfferGenerator.GeneratedOffer> customOffers
@@ -119,6 +187,16 @@ public final class EnchantmentTableListener implements Listener {
         }
     }
 
+    /**
+     * Extracts custom enchantments from the enchantments to be added.
+     * <p>
+     * Filters the enchantment map to only include enchantments that are
+     * registered in our custom registry, mapping them to their definitions.
+     *
+     * @param enchantsToAdd the map of enchantments to be added to the item
+     * @return map of custom enchantment definitions to their levels
+     * @since 0.2.0
+     */
     @NotNull
     private Map<EnchantmentDefinition, Integer> extractCustomEnchantments(
             @NotNull Map<Enchantment, Integer> enchantsToAdd
@@ -142,6 +220,17 @@ public final class EnchantmentTableListener implements Listener {
         return customEnchants;
     }
 
+    /**
+     * Applies custom enchantments to the enchanted item.
+     * <p>
+     * Validates each enchantment level against the definition's min/max levels
+     * before applying. Uses addUnsafeEnchantment to bypass vanilla enchantment
+     * type restrictions.
+     *
+     * @param item the item being enchanted
+     * @param customEnchants map of custom enchantments to apply
+     * @since 0.2.0
+     */
     private void applyCustomEnchantmentsToItem(
             @NotNull ItemStack item,
             @NotNull Map<EnchantmentDefinition, Integer> customEnchants

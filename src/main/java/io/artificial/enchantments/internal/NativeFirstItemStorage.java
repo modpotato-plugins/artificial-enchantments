@@ -41,6 +41,13 @@ public class NativeFirstItemStorage implements ItemStorage {
 
     private static final String ENCHANTMENT_PREFIX = "ae_enchant_";
 
+    /**
+     * Creates a new native-first item storage.
+     *
+     * @param registrySupplier supplier for the enchantment registry manager
+     * @param nbtStorage the NBT metadata storage for auxiliary data
+     * @since 0.1.0
+     */
     public NativeFirstItemStorage(
             @NotNull Supplier<EnchantmentRegistryManager> registrySupplier,
             @NotNull NbtMetadataStorage nbtStorage) {

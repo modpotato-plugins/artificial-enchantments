@@ -43,6 +43,14 @@ public final class EnchantmentEffectListener implements Listener {
     private final EffectDispatchSpine spine;
     private final ItemEnchantmentService itemService;
 
+    /**
+     * Creates a new enchantment effect listener.
+     *
+     * @param plugin      the owning plugin for registration context
+     * @param spine       the dispatch spine for firing enchantment effects
+     * @param itemService the item enchantment service for querying item enchantments
+     * @since 1.0.0
+     */
     public EnchantmentEffectListener(
             @NotNull Plugin plugin,
             @NotNull EffectDispatchSpine spine,
@@ -53,6 +61,16 @@ public final class EnchantmentEffectListener implements Listener {
         this.itemService = itemService;
     }
 
+    /**
+     * Handles entity damage by entity events, dispatching enchantment effects
+     * for weapons held by the attacking player.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#ENTITY_DAMAGE_BY_ENTITY}
+     * context for enchantments on the main hand weapon.
+     *
+     * @param event the damage event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) {
@@ -62,18 +80,49 @@ public final class EnchantmentEffectListener implements Listener {
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
     }
 
+    /**
+     * Handles block break events, dispatching enchantment effects for the
+     * tool used to break the block.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#BLOCK_BREAK}
+     * context for enchantments on the main hand tool.
+     *
+     * @param event the block break event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.BLOCK_BREAK);
     }
 
+    /**
+     * Handles block place events, dispatching enchantment effects for the
+     * item used to place the block.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#BLOCK_PLACE}
+     * context for enchantments on the main hand item.
+     *
+     * @param event the block place event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.BLOCK_PLACE);
     }
 
+    /**
+     * Handles player interact events with blocks, dispatching enchantment effects
+     * for the item in the interacting hand.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#BLOCK_INTERACT}
+     * context for enchantments on the interacting hand. Only processes left and right
+     * click block actions.
+     *
+     * @param event the player interact event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
@@ -85,12 +134,33 @@ public final class EnchantmentEffectListener implements Listener {
         dispatchForItem(item, event, hand, EffectDispatchSpine.DispatchEventType.BLOCK_INTERACT);
     }
 
+    /**
+     * Handles player interact entity events, dispatching enchantment effects
+     * for the item in the interacting hand.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#ENTITY_INTERACT}
+     * context for enchantments on the hand used to interact with the entity.
+     *
+     * @param event the player interact entity event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
         dispatchForItem(item, event, event.getHand(), EffectDispatchSpine.DispatchEventType.ENTITY_INTERACT);
     }
 
+    /**
+     * Handles projectile launch events, dispatching enchantment effects for the
+     * item used to launch the projectile (e.g., bow, crossbow, snowball).
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#PROJECTILE_LAUNCH}
+     * context for enchantments on the main or off hand item. Only processes projectiles
+     * launched by players.
+     *
+     * @param event the projectile launch event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onProjectileLaunch(ProjectileLaunchEvent event) {
         if (!(event.getEntity().getShooter() instanceof Player player)) {
@@ -105,6 +175,17 @@ public final class EnchantmentEffectListener implements Listener {
         dispatchForItem(item, event, slot, EffectDispatchSpine.DispatchEventType.PROJECTILE_LAUNCH);
     }
 
+    /**
+     * Handles projectile hit events, dispatching enchantment effects for the
+     * item used to launch the projectile.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#PROJECTILE_HIT}
+     * context for enchantments on the main or off hand item. Only processes projectiles
+     * shot by players.
+     *
+     * @param event the projectile hit event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         if (!(event.getEntity().getShooter() instanceof Player player)) {
@@ -119,12 +200,33 @@ public final class EnchantmentEffectListener implements Listener {
         dispatchForItem(item, event, slot, EffectDispatchSpine.DispatchEventType.PROJECTILE_HIT);
     }
 
+    /**
+     * Handles player fishing events, dispatching enchantment effects for the
+     * fishing rod in the main hand.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#FISHING_ACTION}
+     * context for enchantments on the fishing rod.
+     *
+     * @param event the player fish event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerFish(PlayerFishEvent event) {
         ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.FISHING_ACTION);
     }
 
+    /**
+     * Handles entity shoot bow events, dispatching enchantment effects for the
+     * bow used to shoot the arrow.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#BOW_SHOOT}
+     * context for enchantments on the bow. Detects whether the bow was in the main
+     * or off hand and dispatches accordingly. Only processes bows shot by players.
+     *
+     * @param event the entity shoot bow event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityShootBow(EntityShootBowEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
@@ -140,24 +242,64 @@ public final class EnchantmentEffectListener implements Listener {
         dispatchForItem(bow, event, slot, EffectDispatchSpine.DispatchEventType.BOW_SHOOT);
     }
 
+    /**
+     * Handles player item consume events, dispatching enchantment effects for the
+     * item being consumed.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#ITEM_CONSUME}
+     * context for enchantments on the consumed item.
+     *
+     * @param event the player item consume event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
         ItemStack item = event.getItem();
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.ITEM_CONSUME);
     }
 
+    /**
+     * Handles player item damage events, dispatching enchantment effects for the
+     * item taking durability damage.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#DURABILITY_DAMAGE}
+     * context for enchantments on the damaged item.
+     *
+     * @param event the player item damage event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerItemDamage(PlayerItemDamageEvent event) {
         ItemStack item = event.getItem();
         dispatchForItem(item, event, null, EffectDispatchSpine.DispatchEventType.DURABILITY_DAMAGE);
     }
 
+    /**
+     * Handles player drop item events, dispatching enchantment effects for the
+     * item being dropped.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#ITEM_DROP}
+     * context for enchantments on the dropped item.
+     *
+     * @param event the player drop item event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         ItemStack item = event.getItemDrop().getItemStack();
         dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.ITEM_DROP);
     }
 
+    /**
+     * Handles entity pickup item events, dispatching enchantment effects for the
+     * item being picked up.
+     *
+     * <p>Creates and dispatches a {@link EffectDispatchSpine.DispatchEventType#ITEM_PICKUP}
+     * context for enchantments on the picked up item. Only processes pickups by players.
+     *
+     * @param event the entity pickup item event
+     * @since 1.0.0
+     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player)) {

@@ -24,6 +24,14 @@ import java.util.logging.Level;
  */
 public class EnchantmentEventBusImpl implements EnchantmentEventBus {
 
+    /**
+     * Creates a new enchantment event bus.
+     *
+     * @since 0.2.0
+     */
+    public EnchantmentEventBusImpl() {
+    }
+
     private final Map<Class<? extends EnchantEffectEvent>, List<SubscriptionImpl<?>>> subscriptions = new ConcurrentHashMap<>();
 
     @Override

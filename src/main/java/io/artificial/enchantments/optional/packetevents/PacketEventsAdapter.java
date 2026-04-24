@@ -331,6 +331,8 @@ public final class PacketEventsAdapter {
      * <p>
      * These settings control how enchanted items appear to a specific player
      * without affecting the actual item state or how other players see the item.
+     *
+     * @since 0.1.0
      */
     public static final class PlayerVisualPreferences {
         
@@ -345,61 +347,141 @@ public final class PacketEventsAdapter {
 
         /**
          * Creates default preferences (all customization enabled).
+         *
+         * @since 0.1.0
          */
         public PlayerVisualPreferences() {
         }
 
+        /**
+         * Checks if visual customization is enabled.
+         *
+         * @return true if customization is enabled
+         * @since 0.1.0
+         */
         public boolean isEnabled() {
             return enabled;
         }
 
+        /**
+         * Sets whether visual customization is enabled.
+         *
+         * @param enabled true to enable, false to disable
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setEnabled(boolean enabled) {
             this.enabled = enabled;
             return this;
         }
 
+        /**
+         * Checks if lore modification is enabled.
+         *
+         * @return true if lore will be modified
+         * @since 0.1.0
+         */
         public boolean isModifyLore() {
             return modifyLore;
         }
 
+        /**
+         * Sets whether to modify item lore.
+         *
+         * @param modifyLore true to modify lore, false to leave unchanged
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setModifyLore(boolean modifyLore) {
             this.modifyLore = modifyLore;
             return this;
         }
 
+        /**
+         * Checks if enchantment glint should be shown.
+         *
+         * @return true if glint is enabled
+         * @since 0.1.0
+         */
         public boolean isShowEnchantmentGlint() {
             return showEnchantmentGlint;
         }
 
+        /**
+         * Sets whether to show the enchantment glint effect.
+         *
+         * @param showEnchantmentGlint true to show glint, false to hide
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setShowEnchantmentGlint(boolean showEnchantmentGlint) {
             this.showEnchantmentGlint = showEnchantmentGlint;
             return this;
         }
 
+        /**
+         * Checks if vanilla enchantments should be hidden.
+         *
+         * @return true if vanilla enchantments are hidden
+         * @since 0.1.0
+         */
         public boolean isHideVanillaEnchantments() {
             return hideVanillaEnchantments;
         }
 
+        /**
+         * Sets whether to hide vanilla enchantments from display.
+         *
+         * @param hideVanillaEnchantments true to hide, false to show
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setHideVanillaEnchantments(boolean hideVanillaEnchantments) {
             this.hideVanillaEnchantments = hideVanillaEnchantments;
             return this;
         }
 
+        /**
+         * Gets the lore prefix string.
+         *
+         * @return the prefix string, or null if not set
+         * @since 0.1.0
+         */
         @Nullable
         public String getLorePrefix() {
             return lorePrefix;
         }
 
+        /**
+         * Sets the lore prefix string.
+         *
+         * @param lorePrefix the prefix string, or null for default
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setLorePrefix(@Nullable String lorePrefix) {
             this.lorePrefix = lorePrefix;
             return this;
         }
 
+        /**
+         * Gets the custom lore formatter.
+         *
+         * @return the custom formatter, or null if not set
+         * @since 0.1.0
+         */
         @Nullable
         public Consumer<VisualContext> getCustomLoreFormatter() {
             return customLoreFormatter;
         }
 
+        /**
+         * Sets a custom lore formatter for enchantment display.
+         *
+         * @param customLoreFormatter the custom formatter, or null for default
+         * @return this preferences object for chaining
+         * @since 0.1.0
+         */
         public PlayerVisualPreferences setCustomLoreFormatter(@Nullable Consumer<VisualContext> customLoreFormatter) {
             this.customLoreFormatter = customLoreFormatter;
             return this;
@@ -408,27 +490,59 @@ public final class PacketEventsAdapter {
 
     /**
      * Context passed to custom lore formatters.
+     * <p>
+     * Contains enchantment information available during lore formatting,
+     * allowing formatters to customize the display output.
+     *
+     * @since 0.1.0
      */
     public static final class VisualContext {
         private final String enchantmentName;
         private final int level;
         private final boolean isArtificial;
 
+        /**
+         * Creates a new visual context.
+         *
+         * @param enchantmentName the display name of the enchantment
+         * @param level the enchantment level
+         * @param isArtificial whether this is an artificial enchantment
+         * @throws NullPointerException if enchantmentName is null
+         * @since 0.1.0
+         */
         public VisualContext(@NotNull String enchantmentName, int level, boolean isArtificial) {
             this.enchantmentName = Objects.requireNonNull(enchantmentName, "enchantmentName cannot be null");
             this.level = level;
             this.isArtificial = isArtificial;
         }
 
+        /**
+         * Gets the enchantment display name.
+         *
+         * @return the enchantment name
+         * @since 0.1.0
+         */
         @NotNull
         public String getEnchantmentName() {
             return enchantmentName;
         }
 
+        /**
+         * Gets the enchantment level.
+         *
+         * @return the enchantment level
+         * @since 0.1.0
+         */
         public int getLevel() {
             return level;
         }
 
+        /**
+         * Checks if this is an artificial enchantment.
+         *
+         * @return true if artificial, false if vanilla
+         * @since 0.1.0
+         */
         public boolean isArtificial() {
             return isArtificial;
         }

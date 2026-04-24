@@ -27,6 +27,14 @@ public class EnchantmentTickTask implements Runnable {
     private final ItemEnchantmentService itemService;
     private BukkitTask task;
 
+    /**
+     * Creates a new tick task for scanning player equipment.
+     *
+     * @param plugin the plugin instance for scheduling
+     * @param spine the effect dispatch spine for triggering enchantment effects
+     * @param itemService the item service for querying enchantments on items
+     * @since 0.1.0
+     */
     public EnchantmentTickTask(
             @NotNull Plugin plugin,
             @NotNull EffectDispatchSpine spine,
@@ -65,10 +73,20 @@ public class EnchantmentTickTask implements Runnable {
         }
     }
 
+    /**
+     * Starts the tick task, scheduling it to run every 20 ticks (1 second).
+     *
+     * @since 0.1.0
+     */
     public void start() {
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this, 20L, 20L);
     }
 
+    /**
+     * Stops the tick task, cancelling any pending executions.
+     *
+     * @since 0.1.0
+     */
     public void stop() {
         if (task != null) {
             task.cancel();

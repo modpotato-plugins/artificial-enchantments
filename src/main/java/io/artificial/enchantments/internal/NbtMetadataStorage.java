@@ -32,6 +32,14 @@ public class NbtMetadataStorage {
     private static final String METADATA_SUBKEY = "aux_meta";
 
     /**
+     * Creates a new NBT metadata storage handler.
+     *
+     * @since 0.1.0
+     */
+    public NbtMetadataStorage() {
+    }
+
+    /**
      * Sets a string metadata value.
      *
      * @param item the item to modify

@@ -371,6 +371,12 @@ public final class ItemVisualProcessor {
 
     /**
      * Fluent builder for creating visual preferences.
+     * <p>
+     * Provides a convenient way to construct {@link PacketEventsAdapter.PlayerVisualPreferences}
+     * with method chaining.
+     *
+     * @since 0.1.0
+     * @see PacketEventsAdapter.PlayerVisualPreferences
      */
     public final class PreferencesBuilder {
         private final PacketEventsAdapter.PlayerVisualPreferences prefs;
@@ -379,42 +385,90 @@ public final class ItemVisualProcessor {
             this.prefs = new PacketEventsAdapter.PlayerVisualPreferences();
         }
 
+        /**
+         * Sets whether visual customization is enabled.
+         *
+         * @param enabled true to enable customization, false to disable
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder enabled(boolean enabled) {
             prefs.setEnabled(enabled);
             return this;
         }
 
+        /**
+         * Sets whether to modify item lore with enchantment information.
+         *
+         * @param modify true to modify lore, false to leave unchanged
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder modifyLore(boolean modify) {
             prefs.setModifyLore(modify);
             return this;
         }
 
+        /**
+         * Sets whether to show the enchantment glint effect.
+         *
+         * @param show true to show glint, false to hide it
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder showGlint(boolean show) {
             prefs.setShowEnchantmentGlint(show);
             return this;
         }
 
+        /**
+         * Sets whether to hide vanilla enchantments from display.
+         *
+         * @param hide true to hide vanilla enchantments, false to show them
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder hideVanillaEnchantments(boolean hide) {
             prefs.setHideVanillaEnchantments(hide);
             return this;
         }
 
+        /**
+         * Sets the lore prefix string used for enchantment lines.
+         *
+         * @param prefix the prefix string, or null for default
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder lorePrefix(@Nullable String prefix) {
             prefs.setLorePrefix(prefix);
             return this;
         }
 
+        /**
+         * Sets a custom lore formatter for enchantment display.
+         *
+         * @param formatter the custom formatter callback, or null for default formatting
+         * @return this builder for chaining
+         * @since 0.1.0
+         */
         @NotNull
         public PreferencesBuilder customFormatter(@Nullable Consumer<PacketEventsAdapter.VisualContext> formatter) {
             prefs.setCustomLoreFormatter(formatter);
             return this;
         }
 
+        /**
+         * Builds and returns the configured preferences.
+         *
+         * @return the configured player visual preferences
+         * @since 0.1.0
+         */
         @NotNull
         public PacketEventsAdapter.PlayerVisualPreferences build() {
             return prefs;
@@ -423,6 +477,11 @@ public final class ItemVisualProcessor {
 
     /**
      * Context object passed to lore formatters.
+     * <p>
+     * Contains information about an enchantment being formatted, allowing
+     * custom formatters to modify the display output.
+     *
+     * @since 0.1.0
      */
     public static final class VisualContext {
         private final String enchantmentName;
@@ -431,29 +490,68 @@ public final class ItemVisualProcessor {
         @Nullable
         private Component overrideComponent;
 
+        /**
+         * Creates a new visual context.
+         *
+         * @param enchantmentName the display name of the enchantment
+         * @param level the enchantment level
+         * @param isArtificial whether this is an artificial enchantment
+         * @throws NullPointerException if enchantmentName is null
+         * @since 0.1.0
+         */
         public VisualContext(@NotNull String enchantmentName, int level, boolean isArtificial) {
             this.enchantmentName = Objects.requireNonNull(enchantmentName, "enchantmentName cannot be null");
             this.level = level;
             this.isArtificial = isArtificial;
         }
 
+        /**
+         * Gets the enchantment display name.
+         *
+         * @return the enchantment name
+         * @since 0.1.0
+         */
         @NotNull
         public String getEnchantmentName() {
             return enchantmentName;
         }
 
+        /**
+         * Gets the enchantment level.
+         *
+         * @return the enchantment level
+         * @since 0.1.0
+         */
         public int getLevel() {
             return level;
         }
 
+        /**
+         * Checks if this is an artificial enchantment.
+         *
+         * @return true if artificial, false if vanilla
+         * @since 0.1.0
+         */
         public boolean isArtificial() {
             return isArtificial;
         }
 
+        /**
+         * Sets an override component to replace the default formatted line.
+         *
+         * @param component the override component, or null to clear
+         * @since 0.1.0
+         */
         public void setOverrideComponent(@Nullable Component component) {
             this.overrideComponent = component;
         }
 
+        /**
+         * Gets the override component if set.
+         *
+         * @return the override component, or null if not set
+         * @since 0.1.0
+         */
         @Nullable
         public Component getOverrideComponent() {
             return overrideComponent;

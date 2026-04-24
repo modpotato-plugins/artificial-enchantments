@@ -15,7 +15,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Event fired when an enchantment effect triggers during player interaction.
+ * Event fired when an interaction-related enchantment effect triggers.
+ *
+ * <p>Carries data about the player, item, block, and entity during player
+ * interaction events (left click, right click). This event is cancellable.
+ *
+ * @see EnchantEffectEvent
+ * @since 0.1.0
  */
 public class InteractionEvent extends EnchantEffectEvent implements Cancellable {
 
@@ -33,6 +39,23 @@ public class InteractionEvent extends EnchantEffectEvent implements Cancellable 
     private final Vector interactionPoint;
     private boolean cancelled;
 
+    /**
+     * Creates a new {@code InteractionEvent}.
+     *
+     * @param enchantment the enchantment that triggered this event
+     * @param level the level of the enchantment
+     * @param scaledValue the scaled value from the enchantment's scaling algorithm
+     * @param player the player interacting
+     * @param item the item used, or null
+     * @param hand the hand used
+     * @param location the interaction location
+     * @param block the block interacted with, or null
+     * @param blockFace the block face clicked, or null
+     * @param targetEntity the entity clicked, or null
+     * @param isLeftClick true if left click
+     * @param isRightClick true if right click
+     * @param interactionPoint the precise interaction point, or null
+     */
     public InteractionEvent(
             @NotNull EnchantmentDefinition enchantment,
             int level,
@@ -62,61 +85,126 @@ public class InteractionEvent extends EnchantEffectEvent implements Cancellable 
         this.cancelled = false;
     }
 
+    /**
+     * Gets the player interacting.
+     *
+     * @return the player
+     */
     @NotNull
     public Player getPlayer() {
         return player;
     }
 
+    /**
+     * Gets the item used.
+     *
+     * @return the item, or null
+     */
     @Nullable
     public ItemStack getItem() {
         return item;
     }
 
+    /**
+     * Gets the hand used.
+     *
+     * @return the hand
+     */
     @NotNull
     public EquipmentSlot getHand() {
         return hand;
     }
 
+    /**
+     * Gets the interaction location.
+     *
+     * @return the location
+     */
     @NotNull
     public Location getLocation() {
         return location;
     }
 
+    /**
+     * Gets the block interacted with.
+     *
+     * @return the block, or null
+     */
     @Nullable
     public Block getBlock() {
         return block;
     }
 
+    /**
+     * Gets the block face clicked.
+     *
+     * @return the block face, or null
+     */
     @Nullable
     public BlockFace getBlockFace() {
         return blockFace;
     }
 
+    /**
+     * Gets the entity clicked.
+     *
+     * @return the target entity, or null
+     */
     @Nullable
     public Entity getTargetEntity() {
         return targetEntity;
     }
 
+    /**
+     * Checks if this is a left click.
+     *
+     * @return true if left click
+     */
     public boolean isLeftClick() {
         return isLeftClick;
     }
 
+    /**
+     * Checks if this is a right click.
+     *
+     * @return true if right click
+     */
     public boolean isRightClick() {
         return isRightClick;
     }
 
+    /**
+     * Checks if this is a block interaction.
+     *
+     * @return true if block was clicked
+     */
     public boolean isBlockInteraction() {
         return block != null;
     }
 
+    /**
+     * Checks if this is an entity interaction.
+     *
+     * @return true if entity was clicked
+     */
     public boolean isEntityInteraction() {
         return targetEntity != null;
     }
 
+    /**
+     * Checks if the player is sneaking.
+     *
+     * @return true if sneaking
+     */
     public boolean isSneaking() {
         return player.isSneaking();
     }
 
+    /**
+     * Gets the precise interaction point.
+     *
+     * @return the interaction point, or null
+     */
     @Nullable
     public Vector getInteractionPoint() {
         return interactionPoint;
@@ -138,6 +226,11 @@ public class InteractionEvent extends EnchantEffectEvent implements Cancellable 
         return HANDLERS;
     }
 
+    /**
+     * Gets the handler list for this event type.
+     *
+     * @return the handler list
+     */
     @NotNull
     public static HandlerList getHandlerList() {
         return HANDLERS;

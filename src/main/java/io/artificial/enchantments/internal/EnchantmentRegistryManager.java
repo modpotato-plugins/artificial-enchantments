@@ -16,8 +16,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Internal registry manager for tracking enchantment definitions.
- * This class maintains the source of truth for all registered enchantments
- * and coordinates with the Paper native registry during bootstrap.
+ * 
+ * <p>This class maintains the source of truth for all registered enchantments
+ * and coordinates with the Paper native registry during bootstrap. It provides
+ * thread-safe storage and indexing for efficient lookup by key or material.
+ * 
+ * <p>Key responsibilities:
+ * <ul>
+ *   <li>Maintain primary storage of enchantment definitions</li>
+ *   <li>Index enchantments by applicable materials for fast lookup</li>
+ *   <li>Track pending native registrations</li>
+ *   <li>Coordinate with PaperRegistryBridge for bidirectional lookup</li>
+ * </ul>
+ *
+ * @since 0.1.0
  */
 public final class EnchantmentRegistryManager {
 
@@ -43,6 +55,11 @@ public final class EnchantmentRegistryManager {
         this.nativeRegistered = ConcurrentHashMap.newKeySet();
     }
 
+    /**
+     * Gets the singleton instance of the registry manager.
+     *
+     * @return the shared EnchantmentRegistryManager instance
+     */
     public static EnchantmentRegistryManager getInstance() {
         if (instance == null) {
             synchronized (LOCK) {
@@ -57,6 +74,9 @@ public final class EnchantmentRegistryManager {
     /**
      * Registers an enchantment definition.
      * This makes it available for native registration during bootstrap.
+     *
+     * @param definition the enchantment definition to register
+     * @return true if the enchantment was newly registered, false if it already existed
      */
     public boolean register(@NotNull EnchantmentDefinition definition) {
         NamespacedKey key = definition.getKey();
@@ -79,6 +99,9 @@ public final class EnchantmentRegistryManager {
 
     /**
      * Unregisters an enchantment definition.
+     *
+     * @param key the namespaced key of the enchantment to unregister
+     * @return true if an enchantment was removed, false if not found
      */
     public boolean unregister(@NotNull NamespacedKey key) {
         EnchantmentDefinition removed = definitions.remove(key);
@@ -99,21 +122,44 @@ public final class EnchantmentRegistryManager {
         return true;
     }
 
+    /**
+     * Gets an enchantment definition by its key.
+     *
+     * @param key the enchantment's namespaced key
+     * @return optional containing the definition, or empty if not found
+     */
     @NotNull
     public Optional<EnchantmentDefinition> get(@NotNull NamespacedKey key) {
         return Optional.ofNullable(definitions.get(key));
     }
 
+    /**
+     * Gets an enchantment definition by its key (nullable variant).
+     *
+     * @param key the enchantment's namespaced key
+     * @return the definition, or null if not found
+     */
     @Nullable
     public EnchantmentDefinition getEnchantment(@NotNull NamespacedKey key) {
         return definitions.get(key);
     }
 
+    /**
+     * Gets all registered enchantment definitions.
+     *
+     * @return unmodifiable collection of all enchantments
+     */
     @NotNull
     public Collection<EnchantmentDefinition> getAll() {
         return Collections.unmodifiableCollection(definitions.values());
     }
 
+    /**
+     * Gets all enchantments applicable to a specific material.
+     *
+     * @param material the material to check
+     * @return unmodifiable set of applicable enchantment definitions
+     */
     @NotNull
     public Set<EnchantmentDefinition> getForMaterial(@NotNull org.bukkit.Material material) {
         Set<EnchantmentDefinition> enchantments = materialIndex.get(material);
@@ -125,6 +171,8 @@ public final class EnchantmentRegistryManager {
     /**
      * Returns all enchantments pending native registration.
      * Called during bootstrap freeze event.
+     *
+     * @return collection of enchantment definitions awaiting native registration
      */
     @NotNull
     public Collection<EnchantmentDefinition> getPendingRegistrations() {
@@ -140,6 +188,8 @@ public final class EnchantmentRegistryManager {
 
     /**
      * Marks an enchantment as successfully registered to native registry.
+     *
+     * @param key the namespaced key of the enchantment to mark as registered
      */
     public void markNativeRegistered(@NotNull NamespacedKey key) {
         pendingNativeRegistration.remove(key);
@@ -148,6 +198,9 @@ public final class EnchantmentRegistryManager {
 
     /**
      * Checks if an enchantment has been registered to the native registry.
+     *
+     * @param key the namespaced key of the enchantment to check
+     * @return true if the enchantment has been registered to the native registry
      */
     public boolean isNativeRegistered(@NotNull NamespacedKey key) {
         return nativeRegistered.contains(key);
