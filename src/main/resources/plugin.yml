@@ -1,5 +1,5 @@
 name: artificial-enchantments
-version: 1.0.1
+version: 1.0.2
 main: io.artificial.enchantments.ArtificialEnchantmentsPlugin
 bootstrapper: io.artificial.enchantments.internal.PaperEnchantmentBootstrap
 api-version: '1.21'

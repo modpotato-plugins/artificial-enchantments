@@ -76,7 +76,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.1")
+    compileOnly("io.artificial:artificial-enchantments:1.0.2")
 }
 ```
 
@@ -824,11 +824,11 @@ prefs.setCustomLoreFormatter(context -> {
 
 ### Shared Plugin Model
 
-**Never shade this library.** Install `artificial-enchantments-1.0.1.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
+**Never shade this library.** Install `artificial-enchantments-1.0.2.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
 
 ```kotlin
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.1")
+    compileOnly("io.artificial:artificial-enchantments:1.0.2")
 }
 ```
 
