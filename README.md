@@ -21,11 +21,11 @@ A Paper 1.21+ library for creating custom enchantments with native registry inte
 
 ### For Server Administrators
 
-Install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
+Download the latest release from [Modrinth](https://modrinth.com/plugin/artificial-enchantments) and install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
 
 ```bash
 # Download the shaded JAR (includes all required dependencies)
-wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/v1.0.2/artificial-enchantments-1.0.2.jar
+# Get it from Modrinth: https://modrinth.com/plugin/artificial-enchantments
 
 # Place in plugins folder
 cp artificial-enchantments-1.0.2.jar /path/to/server/plugins/
