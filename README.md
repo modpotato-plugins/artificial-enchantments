@@ -21,14 +21,14 @@ A Paper 1.21+ library for creating custom enchantments with native registry inte
 
 ### For Server Administrators
 
-Install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
+Install `artificial-enchantments-1.0.3.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
 
 ```bash
 # Download the shaded JAR (includes all required dependencies)
-wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/v1.0.2/artificial-enchantments-1.0.2.jar
+wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/vv1.0.3/artificial-enchantments-1.0.3.jar
 
 # Place in plugins folder
-cp artificial-enchantments-1.0.2.jar /path/to/server/plugins/
+cp artificial-enchantments-1.0.3.jar /path/to/server/plugins/
 ```
 
 ### For Plugin Developers
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.2")
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:vv1.0.3")
 }
 ```
 
@@ -91,7 +91,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.2")
+    compileOnly("io.artificial:artificial-enchantments:1.0.3")
 }
 ```
 
@@ -124,7 +124,7 @@ Artificial Enchantments is designed as a **shared plugin library**. It must be i
 ```
 Server
 ├── plugins/
-│   ├── artificial-enchantments-1.0.2.jar  <-- Install once here
+│   ├── artificial-enchantments-1.0.3.jar  <-- Install once here
 │   ├── my-enchants-plugin.jar              <-- compileOnly dependency
 │   └── another-enchants-plugin.jar         <-- compileOnly dependency
 ```

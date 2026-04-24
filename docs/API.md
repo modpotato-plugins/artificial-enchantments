@@ -1,6 +1,6 @@
 # Artificial Enchantments API Guide
 
-Version 1.0.2 | [GitHub](https://github.com/modpotato-plugins/artificial-enchantments)
+Version 1.0.3 | [GitHub](https://github.com/modpotato-plugins/artificial-enchantments)
 
 This guide covers every public API surface in Artificial Enchantments. It's written for plugin developers who want to build custom enchantments on Paper 1.21+ with full Folia support.
 
@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.2")
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:vv1.0.3")
 }
 ```
 
@@ -76,7 +76,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.2")
+    compileOnly("io.artificial:artificial-enchantments:1.0.3")
 }
 ```
 
@@ -824,11 +824,11 @@ prefs.setCustomLoreFormatter(context -> {
 
 ### Shared Plugin Model
 
-**Never shade this library.** Install `artificial-enchantments-1.0.2.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
+**Never shade this library.** Install `artificial-enchantments-1.0.3.jar` once in `plugins/`. All dependent plugins use `compileOnly`.
 
 ```kotlin
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.2")
+    compileOnly("io.artificial:artificial-enchantments:1.0.3")
 }
 ```
 
@@ -838,7 +838,7 @@ Shading causes duplicate listeners, registry desync, and scheduler leaks.
 
 ```java
 String version = api.getVersion();
-// Returns "1.0.2"
+// Returns "1.0.3"
 ```
 
 ### Effect Handler Patterns
