@@ -305,7 +305,7 @@ jobs:
           loaders: |
             paper
             purpur
-            bukkit
+            folia
 
           game-versions: |
             1.21
