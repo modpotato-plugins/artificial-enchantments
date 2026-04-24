@@ -162,34 +162,81 @@ jobs:
           name: Release ${{ steps.bump_version.outputs.new_version }}
           body: |
             ## Installation
-            
-            ### Gradle (Kotlin DSL)
+
+            This artifact is published to **GitHub Packages**, which requires authentication even for public repositories.
+
+            ### 1. Create a Personal Access Token (PAT)
+
+            1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+            2. Click **Generate new token (classic)**
+            3. Select the `read:packages` scope
+            4. Generate and copy the token
+
+            ### 2. Configure Credentials
+
+            Add to your `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
+
+            ```properties
+            gpr.user=YOUR_GITHUB_USERNAME
+            gpr.key=YOUR_PAT_TOKEN
+            ```
+
+            Or use environment variables:
+
+            ```bash
+            export GITHUB_ACTOR=YOUR_GITHUB_USERNAME
+            export GITHUB_TOKEN=YOUR_PAT_TOKEN
+            ```
+
+            ### 3. Add the Repository
+
+            **Gradle (Kotlin DSL):**
+
+            ```kotlin
+            repositories {
+                mavenCentral()
+                maven {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/modpotato-plugins/artificial-enchantments")
+                    credentials {
+                        username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+                        password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+            ```
+
+            **Maven:**
+
+            ```xml
+            <repositories>
+              <repository>
+                <id>github</id>
+                <name>GitHub Packages</name>
+                <url>https://maven.pkg.github.com/modpotato-plugins/artificial-enchantments</url>
+              </repository>
+            </repositories>
+            ```
+
+            ### 4. Add the Dependency
+
+            **Gradle (Kotlin DSL):**
+
             ```kotlin
             dependencies {
                 compileOnly("io.artificial:artificial-enchantments:${{ steps.bump_version.outputs.new_version }}")
             }
             ```
-            
-            ### Maven
+
+            **Maven:**
+
             ```xml
             <dependency>
               <groupId>io.artificial</groupId>
               <artifactId>artificial-enchantments</artifactId>
               <version>${{ steps.bump_version.outputs.new_version }}</version>
+              <scope>provided</scope>
             </dependency>
-            ```
-            
-            ### GitHub Packages Repository
-            ```kotlin
-            repositories {
-                maven {
-                    url = uri("https://maven.pkg.github.com/${{ github.repository }}")
-                    credentials {
-                        username = System.getenv("GITHUB_ACTOR")
-                        password = System.getenv("GITHUB_TOKEN")
-                    }
-                }
-            }
             ```
           draft: ${{ github.event.inputs.draft_release }}
           generate_release_notes: true

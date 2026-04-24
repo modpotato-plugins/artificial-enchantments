@@ -35,15 +35,52 @@ cp artificial-enchantments-1.0.0.jar /path/to/server/plugins/
 
 Add as a `compileOnly` dependency. **Do NOT shade this library** — see [Multi-Plugin Usage](#multi-plugin-usage) for why.
 
-`build.gradle`:
+Artifacts are published to **GitHub Packages**, which requires authentication even for public repositories.
+
+#### 1. Create a Personal Access Token (PAT)
+
+1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+2. Click **Generate new token (classic)**
+3. Select the `read:packages` scope
+4. Generate and copy the token
+
+#### 2. Configure Credentials
+
+Add to your `~/.gradle/gradle.properties` (global) or project `gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_PAT_TOKEN
+```
+
+Or use environment variables:
+
+```bash
+export GITHUB_ACTOR=YOUR_GITHUB_USERNAME
+export GITHUB_TOKEN=YOUR_PAT_TOKEN
+```
+
+#### 3. Add the Repository
+
+`build.gradle` / `build.gradle.kts`:
 
 ```kotlin
-dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.0")
+repositories {
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/modpotato-plugins/artificial-enchantments")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 ```
 
-`build.gradle.kts`:
+#### 4. Add the Dependency
+
+`build.gradle` / `build.gradle.kts`:
 
 ```kotlin
 dependencies {

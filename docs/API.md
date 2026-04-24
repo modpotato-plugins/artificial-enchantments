@@ -27,6 +27,46 @@ All examples assume you have a `plugin` variable (your `JavaPlugin` instance) an
 
 ## Getting Started
 
+### Repository Setup
+
+Artifacts are published to **GitHub Packages**, which requires authentication even for public repositories.
+
+1. **Create a Personal Access Token (PAT)** with the `read:packages` scope:
+   GitHub Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token
+
+2. **Configure credentials** in `~/.gradle/gradle.properties` (global) or your project's `gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_PAT_TOKEN
+```
+
+3. **Add the repository** to your `build.gradle` / `build.gradle.kts`:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/modpotato-plugins/artificial-enchantments")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
+
+4. **Add the dependency**:
+
+```kotlin
+dependencies {
+    compileOnly("io.artificial:artificial-enchantments:1.0.0")
+}
+```
+
+### Initializing the API
+
 Initialize the API once during `onEnable()`. The library is a shared plugin, so multiple plugins can call `create()` safely. The first call initializes the library. Subsequent calls return the existing instance.
 
 ```java
