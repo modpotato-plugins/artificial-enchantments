@@ -304,6 +304,7 @@ jobs:
 
           loaders: |
             paper
+            purpur
             bukkit
 
           game-versions: |
