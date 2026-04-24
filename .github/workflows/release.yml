@@ -89,42 +89,57 @@ jobs:
       - name: Recursively update version references
         run: |
           NEW_VERSION="${{ steps.bump_version.outputs.new_version }}"
-          echo "Updating all version references to: $NEW_VERSION"
-          
+          TAG_VERSION="${{ steps.bump_version.outputs.tag_version }}"
+          echo "Updating all version references to: $NEW_VERSION (tag: $TAG_VERSION)"
+
           # ── 1. gradle.properties (source of truth) ──
           sed -i "s/^version=.*/version=$NEW_VERSION/" gradle.properties
           echo "✓ Updated gradle.properties"
-          
+
           # ── 2. build.gradle.kts (if any hardcoded version remains) ──
           sed -i "s/version = \"[0-9]*\\.[0-9]*\\.[0-9]*[^\"]*\"/version = \"$NEW_VERSION\"/" build.gradle.kts
           echo "✓ Updated build.gradle.kts"
-          
+
           # ── 3. version.properties ──
           if [ -f "src/main/resources/version.properties" ]; then
             sed -i "s/^version=.*/version=$NEW_VERSION/" src/main/resources/version.properties
             echo "✓ Updated version.properties"
           fi
-          
-          # ── 4. README.md version references ──
-          sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" README.md
-          sed -i -E "s/(artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" README.md
-          echo "✓ Updated README.md"
-          
-          # ── 5. All markdown files ──
-          find . -type f -name "*.md" ! -path "./.git/*" ! -name "CHANGELOG.md" | while read -r f; do
-            if grep -qE "(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+" "$f" || grep -qE "(artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+" "$f"; then
-              sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" "$f"
-              sed -i -E "s/(artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+([^0-9]|$)/\1$NEW_VERSION\2/" "$f"
-              echo "✓ Updated $f"
-            fi
-          done
-          
-          # ── 6. plugin.yml version references ──
+
+          # ── 4. plugin.yml version references ──
           if [ -f "src/main/resources/plugin.yml" ]; then
             sed -i -E "s/^version: .*/version: $NEW_VERSION/" src/main/resources/plugin.yml
             echo "✓ Updated plugin.yml"
           fi
-          
+
+          # ── 5. README.md ──
+          # GitHub Packages artifact references
+          sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" README.md
+          # JAR filenames and release URL paths
+          sed -i -E "s/(artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" README.md
+          # JitPack v-prefixed versions
+          sed -i -E "s/(artificial-enchantments:v)[0-9]+\.[0-9]+\.[0-9]+/\1$TAG_VERSION/g" README.md
+          # Release download URLs: update both tag path and jar name
+          sed -i -E "s|(/releases/download/v)[0-9]+\.[0-9]+\.[0-9]+(/artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+|\1$TAG_VERSION\2$NEW_VERSION|g" README.md
+          echo "✓ Updated README.md"
+
+          # ── 6. All markdown files (including README) ──
+          find . -type f -name "*.md" ! -path "./.git/*" ! -name "CHANGELOG.md" | while read -r f; do
+            # GitHub Packages artifact references
+            sed -i -E "s/(artificial-enchantments:)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" "$f"
+            # JAR filenames
+            sed -i -E "s/(artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" "$f"
+            # JitPack v-prefixed versions
+            sed -i -E "s/(artificial-enchantments:v)[0-9]+\.[0-9]+\.[0-9]+/\1$TAG_VERSION/g" "$f"
+            # Release download URLs
+            sed -i -E "s|(/releases/download/v)[0-9]+\.[0-9]+\.[0-9]+(/artificial-enchantments-)[0-9]+\.[0-9]+\.[0-9]+|\1$TAG_VERSION\2$NEW_VERSION|g" "$f"
+            # Quoted/plain version numbers in code examples (e.g. // Returns "1.0.0")
+            sed -i -E "s/\"[0-9]+\.[0-9]+\.[0-9]+\"/\"$NEW_VERSION\"/g" "$f"
+            # Version headers (e.g. "Version 1.0.0")
+            sed -i -E "s/Version [0-9]+\.[0-9]+\.[0-9]+/Version $NEW_VERSION/g" "$f"
+            echo "✓ Updated $f"
+          done
+
           echo ""
           echo "All version references updated to $NEW_VERSION"
 

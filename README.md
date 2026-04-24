@@ -25,7 +25,7 @@ Install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder
 
 ```bash
 # Download the shaded JAR (includes all required dependencies)
-wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/v1.0.1/artificial-enchantments-1.0.2.jar
+wget https://github.com/modpotato-plugins/artificial-enchantments/releases/download/v1.0.2/artificial-enchantments-1.0.2.jar
 
 # Place in plugins folder
 cp artificial-enchantments-1.0.2.jar /path/to/server/plugins/
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.1")
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.2")
 }
 ```
 
