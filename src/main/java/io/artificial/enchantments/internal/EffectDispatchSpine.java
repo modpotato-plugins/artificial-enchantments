@@ -162,7 +162,7 @@ public final class EffectDispatchSpine {
                     currentMode
             );
 
-            return executeDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
+            return runDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
 
         } catch (Exception e) {
             if (currentMode == EffectExecutionContext.ExecutionMode.STRICT) {
@@ -174,22 +174,6 @@ public final class EffectDispatchSpine {
             }
             LOGGER.log(Level.SEVERE, "Error dispatching effect for " + enchantment.getKey(), e);
             return false;
-        }
-    }
-
-    private boolean executeDispatch(
-            @NotNull EnchantmentDefinition enchantment,
-            @NotNull EffectContext context,
-            @NotNull Event bukkitEvent,
-            @NotNull DispatchEventType eventType,
-            @NotNull EffectExecutionContext executionContext
-    ) {
-        boolean isAsync = bukkitEvent.isAsynchronous();
-
-        if (isAsync) {
-            return runDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
-        } else {
-            return runDispatch(enchantment, context, bukkitEvent, eventType, executionContext);
         }
     }
 

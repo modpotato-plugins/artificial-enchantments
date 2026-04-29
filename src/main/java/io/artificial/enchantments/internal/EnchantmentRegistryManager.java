@@ -197,6 +197,17 @@ public final class EnchantmentRegistryManager {
     }
 
     /**
+     * Removes an enchantment from the pending native registration queue without
+     * marking it as registered. Called when native registration fails so the
+     * pending set does not accumulate stale entries.
+     *
+     * @param key the namespaced key of the enchantment whose pending state should be cleared
+     */
+    public void clearPendingNativeRegistration(@NotNull NamespacedKey key) {
+        pendingNativeRegistration.remove(key);
+    }
+
+    /**
      * Checks if an enchantment has been registered to the native registry.
      *
      * @param key the namespaced key of the enchantment to check

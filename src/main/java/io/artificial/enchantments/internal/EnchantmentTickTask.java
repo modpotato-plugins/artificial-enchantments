@@ -81,6 +81,12 @@ public class EnchantmentTickTask implements Runnable {
 
         activeKeys.add(key);
         TickState state = nextTickState(key, item);
+
+        Map<EnchantmentDefinition, Integer> enchantments = state.cachedEnchantments();
+        if (enchantments.isEmpty()) {
+            return;
+        }
+
         TickDispatchEvent tickEvent = new TickDispatchEvent(
                 player,
                 item,
@@ -90,7 +96,6 @@ public class EnchantmentTickTask implements Runnable {
                 state.heldDurationMillis()
         );
 
-        Map<EnchantmentDefinition, Integer> enchantments = itemService.getEnchantments(item);
         for (Map.Entry<EnchantmentDefinition, Integer> entry : enchantments.entrySet()) {
             spine.dispatch(entry.getKey(), entry.getValue(), tickEvent, slot, eventType);
         }
@@ -102,9 +107,10 @@ public class EnchantmentTickTask implements Runnable {
         TickState current;
 
         if (previous == null || !previous.matches(item)) {
-            current = new TickState(item.clone(), 20, 1_000L);
+            Map<EnchantmentDefinition, Integer> enchantments = itemService.getEnchantments(item);
+            current = new TickState(item.clone(), 20, 1_000L, enchantments);
         } else {
-            current = previous.advance(item);
+            current = previous.advance();
         }
 
         tickStates.put(key, current);
@@ -135,14 +141,20 @@ public class EnchantmentTickTask implements Runnable {
     private record TickSlotKey(@NotNull UUID playerId, @NotNull EquipmentSlot slot) {
     }
 
-    private record TickState(@NotNull ItemStack snapshot, int tickCount, long heldDurationMillis) {
+    private record TickState(
+            @NotNull ItemStack snapshot,
+            int tickCount,
+            long heldDurationMillis,
+            @NotNull Map<EnchantmentDefinition, Integer> cachedEnchantments
+    ) {
         private boolean matches(@NotNull ItemStack item) {
             return snapshot.isSimilar(item);
         }
 
         @NotNull
-        private TickState advance(@NotNull ItemStack item) {
-            return new TickState(item.clone(), tickCount + 20, heldDurationMillis + 1_000L);
+        private TickState advance() {
+            // Item is unchanged (matches() was true); reuse snapshot and cached enchantments.
+            return new TickState(snapshot, tickCount + 20, heldDurationMillis + 1_000L, cachedEnchantments);
         }
     }
 }

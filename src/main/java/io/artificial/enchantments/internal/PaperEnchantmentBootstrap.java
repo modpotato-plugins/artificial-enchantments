@@ -48,6 +48,7 @@ public class PaperEnchantmentBootstrap implements PluginBootstrap {
                     EnchantmentRegistryManager registryManager = EnchantmentRegistryManager.getInstance();
 
                     for (EnchantmentDefinition definition : registryManager.getPendingRegistrations()) {
+                        boolean registered = false;
                         try {
                             Key key = Key.key(
                                     definition.getKey().getNamespace(),
@@ -59,11 +60,18 @@ public class PaperEnchantmentBootstrap implements PluginBootstrap {
                                     b -> PaperEnchantmentConverter.convertToBuilder(definition, b, event)
                             );
 
-                            registryManager.markNativeRegistered(definition.getKey());
+                            registered = true;
                             LOGGER.info("[ArtificialEnchantments] Registered native enchantment: " + definition.getKey());
                         } catch (Exception e) {
                             LOGGER.severe("[ArtificialEnchantments] Failed to register enchantment " + definition.getKey() + ": " + e.getMessage());
                             e.printStackTrace();
+                        } finally {
+                            if (registered) {
+                                registryManager.markNativeRegistered(definition.getKey());
+                            } else {
+                                // Clear from pending so stale entries don't accumulate.
+                                registryManager.clearPendingNativeRegistration(definition.getKey());
+                            }
                         }
                     }
 

@@ -323,6 +323,36 @@ class EnchantmentRegistryManagerTest {
         assertFalse(registry.getForMaterial(Material.STONE_SWORD).contains(enchantment));
     }
 
+    @Test
+    @Order(21)
+    @DisplayName("clearPendingNativeRegistration removes from pending without marking registered")
+    void clearPendingNativeRegistrationRemovesFromPending() {
+        EnchantmentDefinition enchantment = createTestEnchantment("clear_pending_test", Material.DIAMOND_SWORD);
+        registry.register(enchantment);
+
+        assertTrue(registry.getPendingRegistrations().contains(enchantment),
+                "Should start in pending state");
+        assertFalse(registry.isNativeRegistered(enchantment.getKey()),
+                "Should not yet be native registered");
+
+        registry.clearPendingNativeRegistration(enchantment.getKey());
+
+        assertFalse(registry.getPendingRegistrations().contains(enchantment),
+                "Should be removed from pending after clear");
+        assertFalse(registry.isNativeRegistered(enchantment.getKey()),
+                "Should NOT be marked as native registered after a clear (not success)");
+    }
+
+    @Test
+    @Order(22)
+    @DisplayName("clearPendingNativeRegistration on unknown key is a no-op")
+    void clearPendingNativeRegistrationUnknownKeyIsNoop() {
+        NamespacedKey unknownKey = new NamespacedKey(TEST_NAMESPACE, "never_registered_pending");
+
+        assertDoesNotThrow(() -> registry.clearPendingNativeRegistration(unknownKey));
+        assertFalse(registry.isNativeRegistered(unknownKey));
+    }
+
     // Helper method to create test enchantments
     private EnchantmentDefinition createTestEnchantment(String name, Material... materials) {
         return new TestEnchantmentDefinition(name, materials);
