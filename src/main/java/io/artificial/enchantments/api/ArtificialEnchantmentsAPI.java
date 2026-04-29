@@ -15,8 +15,12 @@ import java.util.Set;
  * The primary entry point for the Artificial Enchantments library.
  * 
  * <p>This interface provides methods for registering custom enchantments,
- * applying them to items, and querying enchantment state. All operations are
- * thread-safe and Folia-compatible.
+ * applying them to items, and querying enchantment state.
+ *
+ * <p>Registry and event bus internals are safe for concurrent access, but item
+ * mutation and effect execution should still be treated as normal server-side
+ * work. The public scheduler abstraction helps dependent plugins centralize
+ * their own scheduling decisions.
  *
  * <p><strong>Native-First Storage Policy:</strong><br>
  * This library uses Bukkit's native ItemMeta as the source of truth for
@@ -41,13 +45,13 @@ import java.util.Set;
 public interface ArtificialEnchantmentsAPI {
 
     /**
-     * Creates a new API instance bound to the specified plugin.
+     * Creates or returns the shared API instance.
      * 
-     * <p>This method initializes the library for use by your plugin. Each
-     * plugin should call this once during {@code onEnable()}.
+     * <p>The first caller initializes the library. Later calls return the same
+     * shared instance and do not rebind ownership to the newer plugin.
      *
      * @param plugin the plugin requesting the API (must not be null)
-     * @return a new API instance bound to the plugin
+     * @return the shared API instance
      * @since 0.1.0
      */
     @NotNull

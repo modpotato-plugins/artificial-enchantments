@@ -10,8 +10,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Event fired periodically when an enchanted item is held or worn as armor.
  *
- * <p>Carries data about the player, item, slot, and held duration during
- * periodic tick events. This event is not cancellable.
+ * <p>Carries data about the player, item, slot, and consecutive scan counters
+ * during periodic tick events. This event is not cancellable.
  *
  * @see EnchantEffectEvent
  * @since 0.1.0
@@ -39,8 +39,10 @@ public class TickEvent extends EnchantEffectEvent {
      * @param slot the equipment slot
      * @param isHeld true if the item is being held in hand
      * @param isArmor true if the item is worn as armor
-     * @param tickCount the tick counter
-     * @param heldDuration the duration the item has been held in ticks
+     * @param tickCount the number of ticks represented by the current
+     *                  consecutive scan window
+     * @param heldDuration the approximate held or equipped duration in
+     *                     milliseconds for the current consecutive scan window
      */
     public TickEvent(
             @NotNull EnchantmentDefinition enchantment,

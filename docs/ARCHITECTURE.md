@@ -32,13 +32,9 @@ The library supports two ways to handle enchantment effects:
 
 Both paths flow through a single dispatch spine to ensure consistent behavior and avoid double-firing.
 
-### 3. Folia-First Design
+### 3. Scheduler-Abstraction Design
 
-All operations are designed to work with Folia's region-threading model:
-
-- Region ownership checks happen automatically
-- Operations reschedule themselves to the correct thread when needed
-- Plugin developers don't need to think about thread safety
+The library exposes a `FoliaScheduler` abstraction so dependent plugins can centralize how they schedule follow-up work. The current in-tree implementation is `BukkitFoliaScheduler`, so item mutation and heavy work should still be treated conservatively as server-side operations and validated on Folia before production use.
 
 ## Storage Model
 
@@ -159,8 +155,8 @@ EventSubscription<T> register(
 ```
 
 Subscriptions are:
-- Weakly referenced to prevent memory leaks
-- Automatically cleaned up on plugin disable
+- Stored strongly in a concurrent map keyed by event type
+- Automatically cleaned up on plugin disable via a lifecycle listener
 - Type-safe through generics
 
 ## Thread Safety
@@ -175,7 +171,7 @@ The registry uses `ConcurrentHashMap` for thread-safe storage:
 
 ### FoliaScheduler Abstraction
 
-Provides unified scheduling across Folia and non-Folia:
+Provides a single scheduling interface across runtime environments:
 
 ```java
 // Global region execution
@@ -189,18 +185,18 @@ scheduler.runAtLocation(Location, Runnable)
 ```
 
 The abstraction:
-- Detects Folia at runtime
-- Handles region ownership checks
-- Reschedules to correct thread when needed
-- Falls back to Bukkit scheduler on non-Folia
+- Detects Folia classes at runtime
+- Gives dependent plugins one scheduler API to target
+- Uses the in-tree `BukkitFoliaScheduler` implementation today
+- Leaves final region-thread validation to the deploying plugin/server stack
 
 ### Item Operations
 
-Item enchantment operations are designed for thread safety:
+Item enchantment operations are designed around normal server-thread mutation:
 
-- ItemStack creation/manipulation is single-threaded (server thread)
-- The API validates thread context and reschedules if needed
-- Folia-aware methods ensure operations happen on the correct region thread
+- ItemStack creation/manipulation is single-threaded work
+- Registry lookups and event-bus bookkeeping are concurrent-safe
+- Callers should explicitly reschedule heavy or thread-sensitive follow-up work
 
 ## Paper Integration
 
@@ -264,8 +260,10 @@ The optional module provides advanced visual customization:
 
 **Activation:**
 ```java
-// Enable in config or via API
-PacketEventsAdapter.enable(plugin);
+PacketEventsAdapter adapter = new PacketEventsAdapter(plugin);
+if (adapter.enable()) {
+    // PacketEvents-backed visuals are now active
+}
 ```
 
 **Safety:**
@@ -368,7 +366,7 @@ Test with Paper test server:
 - Native registration succeeds
 - Item enchantment roundtrips correctly
 - Effects fire on game events
-- Folia thread safety works
+- Tick scans and scheduler behavior work as expected on the target server
 
 ### QA Scenarios
 

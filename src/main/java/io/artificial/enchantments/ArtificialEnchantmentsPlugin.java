@@ -2,7 +2,6 @@ package io.artificial.enchantments;
 
 import io.artificial.enchantments.api.ArtificialEnchantmentsAPI;
 import io.artificial.enchantments.api.ItemStorage;
-import io.artificial.enchantments.internal.BukkitFoliaScheduler;
 import io.artificial.enchantments.internal.EffectDispatchSpine;
 import io.artificial.enchantments.internal.EnchantmentEffectListener;
 import io.artificial.enchantments.internal.EnchantmentTickTask;
@@ -10,6 +9,7 @@ import io.artificial.enchantments.internal.EnchantmentRegistryManager;
 import io.artificial.enchantments.internal.FoliaScheduler;
 import io.artificial.enchantments.internal.ItemEnchantmentService;
 import io.artificial.enchantments.internal.PaperRegistryBridge;
+import io.artificial.enchantments.internal.PluginDisableCleanupListener;
 import io.artificial.enchantments.internal.anvil.AnvilListener;
 import io.artificial.enchantments.internal.enchanttable.EnchantmentTableListener;
 import io.artificial.enchantments.internal.loot.BlockBreakLootHandler;
@@ -92,9 +92,15 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         registerAnvilListener(api.getItemStorage());
         registerBlockBreakLootListener(api);
         registerEffectListener(api);
+        registerPluginLifecycleListener(api);
 
         if (itemEnchantmentService != null && effectDispatchSpine != null) {
-            this.tickTask = new EnchantmentTickTask(this, effectDispatchSpine, itemEnchantmentService);
+            this.tickTask = new EnchantmentTickTask(
+                    this,
+                    api.getScheduler(),
+                    effectDispatchSpine,
+                    itemEnchantmentService
+            );
             this.tickTask.start();
         }
 
@@ -165,7 +171,7 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
      * @param api the API instance
      */
     private void registerEffectListener(@NotNull ArtificialEnchantmentsAPI api) {
-        FoliaScheduler scheduler = new BukkitFoliaScheduler();
+        FoliaScheduler scheduler = api.getScheduler();
         EffectDispatchSpine spine = new EffectDispatchSpine(scheduler, api.getEventBus());
         this.effectDispatchSpine = spine;
 
@@ -175,6 +181,14 @@ public class ArtificialEnchantmentsPlugin extends JavaPlugin {
         EnchantmentEffectListener listener = new EnchantmentEffectListener(this, spine, this.itemEnchantmentService);
         getServer().getPluginManager().registerEvents(listener, this);
         getLogger().info("Enchantment effect listener registered");
+    }
+
+    private void registerPluginLifecycleListener(@NotNull ArtificialEnchantmentsAPI api) {
+        getServer().getPluginManager().registerEvents(
+                new PluginDisableCleanupListener(api.getEventBus()),
+                this
+        );
+        getLogger().info("Plugin lifecycle listener registered");
     }
 
     /**

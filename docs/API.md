@@ -2,7 +2,7 @@
 
 Version 1.0.2 | [GitHub](https://github.com/modpotato-plugins/artificial-enchantments)
 
-This guide covers every public API surface in Artificial Enchantments. It's written for plugin developers who want to build custom enchantments on Paper 1.21+ with full Folia support.
+This guide covers every public API surface in Artificial Enchantments. It's written for plugin developers who want to build custom enchantments on Paper 1.21+ with the library's shared registry, dispatch, and scheduling abstractions.
 
 All examples assume you have a `plugin` variable (your `JavaPlugin` instance) and an `api` variable (your `ArtificialEnchantmentsAPI` instance).
 
@@ -82,7 +82,7 @@ dependencies {
 
 ### Initializing the API
 
-Initialize the API once during `onEnable()`. The library is a shared plugin, so multiple plugins can call `create()` safely. The first call initializes the library. Subsequent calls return the existing instance.
+Initialize the API once during `onEnable()`. The library is a shared plugin, so multiple plugins can call `create()` safely. The first call initializes the shared instance. Subsequent calls return that same instance and do not rebind ownership to the newer plugin.
 
 ```java
 public class MyPlugin extends JavaPlugin {
@@ -478,7 +478,7 @@ Event bus listeners receive the same context data as typed callbacks. Both appro
 
 ## Item Operations
 
-The API provides two ways to work with item enchantments: direct API methods and the `ItemStorage` interface. Both are fully thread-safe and Folia-compatible.
+The API provides two ways to work with item enchantments: direct API methods and the `ItemStorage` interface. Registry and event-bus internals are concurrent-safe, but item mutation should still be treated as ordinary server-side work.
 
 ### Applying Enchantments
 
@@ -702,16 +702,16 @@ int count = registry.getModifierCount(myEnchantment);
 
 ## Thread Safety and Folia
 
-All public API methods are thread-safe. Registry operations use `ConcurrentHashMap`. Item operations validate thread context and reschedule to the correct region thread when needed.
+Treat registry and event-bus operations as concurrency-safe internals, but treat item mutation and effect execution as synchronous server-side flows. The library does not automatically reschedule arbitrary item work to a region thread for you.
 
 ### Scheduler
 
-Use the provided scheduler for Folia-safe task execution:
+Use the provided scheduler abstraction to keep your plugin-side scheduling consistent:
 
 ```java
 FoliaScheduler scheduler = api.getScheduler();
 
-// Run on global region thread
+// Run on the library's global scheduler abstraction
 scheduler.runGlobal(plugin, () -> {
     // Non-location-dependent work
 });
@@ -740,9 +740,11 @@ ScheduledTask timer = scheduler.runGlobalTimer(plugin, t -> {
 task.cancel();
 ```
 
+The in-tree implementation is currently `BukkitFoliaScheduler`, so validate behavior on Folia rather than assuming transparent region hopping.
+
 ### Keep Handlers Lightweight
 
-Effect handlers run on the server thread (or region thread on Folia). Reschedule heavy work:
+Effect handlers run inline with the dispatch spine. Tick callbacks are synthetic scans emitted every 20 ticks for held and armor slots, not native Bukkit events. Reschedule heavy work:
 
 ```java
 @Override
@@ -757,11 +759,11 @@ public void onBlockBreak(@NotNull ToolContext context) {
 }
 ```
 
-### Thread Checks
+### Environment Checks
 
 ```java
 if (api.isFolia()) {
-    getLogger().info("Running on Folia with region threading");
+    getLogger().info("Folia classes detected on the runtime");
 }
 
 if (api.getScheduler().isPrimaryThread()) {

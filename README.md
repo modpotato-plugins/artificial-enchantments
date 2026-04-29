@@ -1,20 +1,21 @@
 # Artificial Enchantments
 
-A Paper 1.21+ library for creating custom enchantments with native registry integration, Folia support, and flexible effect handling.
+A Paper 1.21+ shared library for creating custom enchantments with native registry integration, a shared plugin model, and flexible effect handling.
 
 ## Features
 
 - Native Paper 1.21+ registry integration (client-visible enchantments without lore hacks)
-- Folia-safe region-thread scheduling
+- Shared plugin model for multi-plugin enchantment ecosystems
 - Native-first storage (ItemMeta as source of truth)
 - Dual effect dispatch: typed callbacks + event bus
 - Built-in scaling formulas (linear, exponential, diminishing, stepped)
+- Held and armor tick callbacks with consecutive scan counters
 - Optional PacketEvents adapter boundary
-- Thread-safe registry and item operations
+- Thread-safe registry and event bus internals
 
 ## Requirements
 
-- Paper 1.21+ (Folia supported)
+- Paper 1.21+ (the repository declares Folia support metadata, but you should still validate scheduler behavior on your target server)
 - Java 21+
 
 ## Installation
@@ -325,20 +326,16 @@ Effect handlers receive context objects with relevant data:
 | `InteractionContext` | Player interact | Block/entity, hand, click type |
 | `ProjectileContext` | Projectile launch/hit | Projectile, shooter, velocity |
 | `FishingContext` | Fishing actions | Hook, caught item/entity |
-| `TickContext` | Held/armor ticks | Player, item, slot, tick count |
+| `TickContext` | Held/armor ticks | Player, item snapshot, slot, consecutive scan counters |
 | `ItemContext` | Item usage/durability | Item, slot, durability |
 | `ConsumableContext` | Item consumption | Food level, saturation, health |
 | `WeaponContext` | Bow/trident use | Force, critical, pierce level |
 
-## Thread Safety
+## Threading Notes
 
-All public API methods are thread-safe:
+The registry and event bus use concurrent data structures, but item mutation and effect execution still run as normal server-side work. Do not assume the library will hop to the correct thread for you, and validate any Folia deployment against your actual plugin stack.
 
-- Registry operations use `ConcurrentHashMap`
-- Item operations are atomic
-- Folia region checks happen automatically
-
-Keep effect handlers lightweight. Reschedule heavy work:
+Keep effect handlers lightweight. Reschedule heavy work explicitly:
 
 ```java
 @Override
@@ -347,9 +344,9 @@ public void onBlockBreak(@NotNull ToolContext context) {
     context.addDrop(new ItemStack(Material.DIAMOND));
     
     // Heavy work: reschedule
-    api.getScheduler().runLater(plugin, () -> {
+    api.getScheduler().runGlobalDelayed(plugin, () -> {
         // Expensive operation here
-    }, 1);
+    }, 1L);
 }
 ```
 
@@ -380,13 +377,7 @@ Immutable definition created via builder:
 
 ### EnchantmentEffectHandler
 
-Interface for typed callback effects. Override methods for events you care about:
-
-- `onEntityDamageByEntity(CombatContext)` - Attack damage
-- `onBlockBreak(ToolContext)` - Block breaking
-- `onProjectileLaunch(ProjectileContext)` - Projectiles
-- `onHeldTick(TickContext)` - Periodic held item effects
-- ... and 15 more event types
+Interface for typed callback effects. Override only the events you care about; the full list of 20 callbacks lives in `docs/API.md`.
 
 ### EnchantmentEventBus
 

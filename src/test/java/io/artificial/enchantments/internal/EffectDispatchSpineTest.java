@@ -9,13 +9,16 @@ import io.artificial.enchantments.api.event.CombatEvent;
 import io.artificial.enchantments.api.event.EnchantEffectEvent;
 import io.artificial.enchantments.api.scaling.LevelScaling;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -241,6 +244,101 @@ class EffectDispatchSpineTest {
             EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
         
         assertEquals(4, capturedLevel.get());
+    }
+
+    @Test
+    @DisplayName("Tick dispatch populates typed callback context")
+    void tickDispatchPopulatesTypedCallbackContext() {
+        AtomicReference<Player> capturedPlayer = new AtomicReference<>();
+        AtomicReference<ItemStack> capturedItem = new AtomicReference<>();
+        AtomicReference<EquipmentSlot> capturedSlot = new AtomicReference<>();
+        AtomicReference<Integer> capturedTickCount = new AtomicReference<>();
+        AtomicReference<Long> capturedHeldDuration = new AtomicReference<>();
+
+        EnchantmentEffectHandler handler = new EnchantmentEffectHandler() {
+            @Override
+            public void onHeldTick(io.artificial.enchantments.api.context.TickContext context) {
+                capturedPlayer.set(context.getPlayer());
+                capturedItem.set(context.getItem());
+                capturedSlot.set(context.getSlot());
+                capturedTickCount.set(context.getTickCount());
+                capturedHeldDuration.set(context.getHeldDuration());
+            }
+        };
+
+        EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("tick_test", handler, 1, 5);
+        Player player = mock(Player.class);
+        ItemStack sword = mock(ItemStack.class);
+        when(player.getLocation()).thenReturn(new Location(null, 12, 64, 12));
+        when(sword.clone()).thenReturn(sword);
+        when(sword.getType()).thenReturn(Material.DIAMOND_SWORD);
+        TickDispatchEvent tickEvent = new TickDispatchEvent(
+                player,
+                sword,
+                EquipmentSlot.HAND,
+                true,
+                40,
+                2_000L
+        );
+
+        boolean result = spine.dispatch(
+                enchantment,
+                2,
+                tickEvent,
+                EquipmentSlot.HAND,
+                EffectDispatchSpine.DispatchEventType.HELD_TICK
+        );
+
+        assertTrue(result);
+        assertSame(player, capturedPlayer.get());
+        assertEquals(Material.DIAMOND_SWORD, capturedItem.get().getType());
+        assertEquals(EquipmentSlot.HAND, capturedSlot.get());
+        assertEquals(40, capturedTickCount.get());
+        assertEquals(2_000L, capturedHeldDuration.get());
+    }
+
+    @Test
+    @DisplayName("Tick dispatch populates event bus payload")
+    void tickDispatchPopulatesEventBusPayload() {
+        AtomicReference<io.artificial.enchantments.api.event.TickEvent> capturedEvent = new AtomicReference<>();
+        eventBus.setListener(event -> {
+            if (event instanceof io.artificial.enchantments.api.event.TickEvent tickEvent) {
+                capturedEvent.set(tickEvent);
+            }
+        });
+
+        EnchantmentDefinition enchantment = createTestEnchantment("tick_bus_test", 1, 5);
+        Player player = mock(Player.class);
+        ItemStack helmet = mock(ItemStack.class);
+        when(player.getLocation()).thenReturn(new Location(null, 0, 64, 0));
+        when(helmet.clone()).thenReturn(helmet);
+        when(helmet.getType()).thenReturn(Material.DIAMOND_HELMET);
+        TickDispatchEvent tickEvent = new TickDispatchEvent(
+                player,
+                helmet,
+                EquipmentSlot.HEAD,
+                false,
+                60,
+                3_000L
+        );
+
+        boolean result = spine.dispatch(
+                enchantment,
+                3,
+                tickEvent,
+                EquipmentSlot.HEAD,
+                EffectDispatchSpine.DispatchEventType.ARMOR_TICK
+        );
+
+        assertTrue(result);
+        assertNotNull(capturedEvent.get());
+        assertSame(player, capturedEvent.get().getPlayer());
+        assertEquals(Material.DIAMOND_HELMET, capturedEvent.get().getItem().getType());
+        assertEquals(EquipmentSlot.HEAD, capturedEvent.get().getSlot());
+        assertEquals(60, capturedEvent.get().getTickCount());
+        assertEquals(3_000L, capturedEvent.get().getHeldDuration());
+        assertTrue(capturedEvent.get().isArmor());
+        assertFalse(capturedEvent.get().isHeld());
     }
 
     private EnchantmentDefinition createTestEnchantment(String name, int minLevel, int maxLevel) {

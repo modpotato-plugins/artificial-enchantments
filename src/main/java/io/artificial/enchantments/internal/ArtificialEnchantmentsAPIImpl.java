@@ -19,6 +19,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,7 +34,8 @@ import java.util.Set;
  */
 public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI {
 
-    private static ArtificialEnchantmentsAPIImpl instance;
+    private static final Object LOCK = new Object();
+    private static volatile ArtificialEnchantmentsAPIImpl instance;
 
     private final Plugin plugin;
     private final ItemEnchantmentService itemService;
@@ -67,8 +69,14 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
      */
     @NotNull
     public static ArtificialEnchantmentsAPIImpl create(@NotNull Plugin plugin) {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+
         if (instance == null) {
-            instance = new ArtificialEnchantmentsAPIImpl(plugin);
+            synchronized (LOCK) {
+                if (instance == null) {
+                    instance = new ArtificialEnchantmentsAPIImpl(plugin);
+                }
+            }
         }
         return instance;
     }
@@ -85,6 +93,12 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
             throw new IllegalStateException("API not initialized. Call create() first.");
         }
         return instance;
+    }
+
+    static void resetForTesting() {
+        synchronized (LOCK) {
+            instance = null;
+        }
     }
 
     @Override

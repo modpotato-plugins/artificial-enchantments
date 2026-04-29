@@ -25,9 +25,10 @@ import org.jetbrains.annotations.NotNull;
  * Call {@link EffectContext#tryCancel()} to cancel the underlying Bukkit event.
  * Cancellation propagates through both typed callbacks and event bus listeners.
  *
- * <p><strong>Thread Safety:</strong><br>
- * All handler methods may be called from the server thread or region threads
- * (on Folia). Keep handlers lightweight and reschedule heavy work if needed.
+ * <p><strong>Threading:</strong><br>
+ * Handlers execute inline with the library's dispatch flow. Keep them light,
+ * avoid blocking work, and reschedule anything expensive through your own
+ * scheduler usage.
  *
  * <p><strong>Example Implementation:</strong>
  * <pre>{@code

@@ -185,11 +185,10 @@ public final class ContextFactory {
             @Nullable EquipmentSlot slot,
             @NotNull EffectDispatchSpine.DispatchEventType eventType
     ) {
-        // Tick contexts are typically not created from Bukkit events
-        // They would be created from scheduled tick tasks
-        return new TickContextImpl(
-                enchantment, level, scaledValue, slot, eventType == EffectDispatchSpine.DispatchEventType.HELD_TICK
-        );
+        if (!(bukkitEvent instanceof TickDispatchEvent tickEvent)) {
+            return null;
+        }
+        return new TickContextImpl(enchantment, level, scaledValue, tickEvent);
     }
 
     @Nullable
@@ -1097,24 +1096,20 @@ public final class ContextFactory {
                 @NotNull EnchantmentDefinition enchantment,
                 int level,
                 double scaledValue,
-                @Nullable EquipmentSlot slot,
-                boolean isHeld
+                @NotNull TickDispatchEvent tickEvent
         ) {
             super(enchantment, level, scaledValue);
-            this.slot = slot != null ? slot : EquipmentSlot.HAND;
-            this.isHeld = isHeld;
-            this.player = null;
-            this.item = new ItemStack(org.bukkit.Material.AIR);
-            this.tickCount = 0;
-            this.heldDuration = 0;
+            this.player = tickEvent.getPlayer();
+            this.item = tickEvent.getItem();
+            this.slot = tickEvent.getSlot();
+            this.isHeld = tickEvent.isHeld();
+            this.tickCount = tickEvent.getTickCount();
+            this.heldDuration = tickEvent.getHeldDuration();
         }
 
         @Override
         @NotNull
         public Player getPlayer() {
-            if (player == null) {
-                throw new IllegalStateException("Tick context not associated with a player");
-            }
             return player;
         }
 
@@ -1133,7 +1128,7 @@ public final class ContextFactory {
         @Override
         @NotNull
         public Location getLocation() {
-            return player != null ? player.getLocation() : new Location(null, 0, 0, 0);
+            return player.getLocation();
         }
 
         @Override

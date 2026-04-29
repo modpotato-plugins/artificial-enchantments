@@ -12,7 +12,7 @@ Artificial Enchantments is a **server-side library** that multiple plugins can d
 
 ## Requirements
 
-- **Paper 1.21+** (Purpur and Folia supported)
+- **Paper 1.21+** (Purpur supported; validate Folia behavior with your own plugin stack)
 - **Java 21+**
 
 ## Installation
@@ -39,7 +39,7 @@ Artificial Enchantments solves this by sitting **between** the server and enchan
 |---|---|
 | Paper | ✅ Supported |
 | Purpur | ✅ Supported |
-| Folia | ✅ Supported |
+| Folia | ⚠️ Declared support; validate on your target stack |
 | Spigot | ❌ Not supported (requires Paper 1.21+ API) |
 
 ## For Plugin Developers
