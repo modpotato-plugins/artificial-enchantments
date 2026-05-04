@@ -22,14 +22,14 @@ A Paper 1.21+ shared library for creating custom enchantments with native regist
 
 ### For Server Administrators
 
-Download the latest release from [Modrinth](https://modrinth.com/plugin/artificial-enchantments-api) and install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** - it must be installed as a plugin, not shaded into other plugins.
+Download the latest release from [Modrinth](https://modrinth.com/plugin/artificial-enchantments-api) and install `artificial-enchantments-1.1.0.jar` into your server's `plugins/` folder. This is a **shared plugin library** - it must be installed as a plugin, not shaded into other plugins.
 
 ```bash
 # Download the shaded JAR (includes all required dependencies)
 # Get it from Modrinth: https://modrinth.com/plugin/artificial-enchantments-api
 
 # Place in plugins folder
-cp artificial-enchantments-1.0.2.jar /path/to/server/plugins/
+cp artificial-enchantments-1.1.0.jar /path/to/server/plugins/
 ```
 
 ### For Plugin Developers
@@ -49,7 +49,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.modpotato-plugins:artificial-enchantments:v1.0.2")
+    compileOnly("com.github.modpotato-plugins:artificial-enchantments:vv1.1.0")
 }
 ```
 
@@ -92,7 +92,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.artificial:artificial-enchantments:1.0.2")
+    compileOnly("io.artificial:artificial-enchantments:1.1.0")
 }
 ```
 
@@ -125,7 +125,7 @@ Artificial Enchantments is designed as a **shared plugin library**. It must be i
 ```
 Server
 ├── plugins/
-│   ├── artificial-enchantments-1.0.2.jar  <-- Install once here
+│   ├── artificial-enchantments-1.1.0.jar  <-- Install once here
 │   ├── my-enchants-plugin.jar              <-- compileOnly dependency
 │   └── another-enchants-plugin.jar         <-- compileOnly dependency
 ```
