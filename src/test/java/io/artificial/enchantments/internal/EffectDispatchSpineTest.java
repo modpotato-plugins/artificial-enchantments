@@ -5,6 +5,7 @@ import io.artificial.enchantments.api.EnchantmentEffectHandler;
 import io.artificial.enchantments.api.EnchantmentEventBus;
 import io.artificial.enchantments.api.context.CombatContext;
 import io.artificial.enchantments.api.context.EffectContext;
+import io.artificial.enchantments.api.context.ItemContext;
 import io.artificial.enchantments.api.event.CombatEvent;
 import io.artificial.enchantments.api.event.EnchantEffectEvent;
 import io.artificial.enchantments.api.scaling.LevelScaling;
@@ -32,8 +33,10 @@ import java.util.function.Consumer;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -339,6 +342,51 @@ class EffectDispatchSpineTest {
         assertEquals(3_000L, capturedEvent.get().getHeldDuration());
         assertTrue(capturedEvent.get().isArmor());
         assertFalse(capturedEvent.get().isHeld());
+    }
+
+    @Test
+    @DisplayName("Durability dispatch populates item context and syncs damage")
+    void durabilityDispatchPopulatesItemContextAndSyncsDamage() {
+        AtomicReference<Player> capturedPlayer = new AtomicReference<>();
+        AtomicReference<ItemStack> capturedItem = new AtomicReference<>();
+        AtomicReference<Integer> capturedDamage = new AtomicReference<>();
+
+        EnchantmentEffectHandler handler = new EnchantmentEffectHandler() {
+            @Override
+            public void onDurabilityDamage(ItemContext context) {
+                capturedPlayer.set(context.getPlayer());
+                capturedItem.set(context.getItem());
+                capturedDamage.set(context.getDamageTaken());
+                context.reduceDamage(3);
+            }
+        };
+
+        EnchantmentDefinition enchantment = createTestEnchantmentWithHandler("durability_test", handler, 1, 5);
+        Player player = mock(Player.class);
+        ItemStack sword = mock(ItemStack.class);
+        PlayerItemDamageEvent damageEvent = mock(PlayerItemDamageEvent.class);
+        when(player.getLocation()).thenReturn(new Location(null, 3, 64, 3));
+        when(sword.clone()).thenReturn(sword);
+        when(sword.getType()).thenReturn(Material.DIAMOND_SWORD);
+        when(sword.getItemMeta()).thenReturn(null);
+        when(damageEvent.isCancelled()).thenReturn(false);
+        when(damageEvent.getPlayer()).thenReturn(player);
+        when(damageEvent.getItem()).thenReturn(sword);
+        when(damageEvent.getDamage()).thenReturn(7);
+
+        boolean result = spine.dispatch(
+                enchantment,
+                2,
+                damageEvent,
+                EquipmentSlot.HAND,
+                EffectDispatchSpine.DispatchEventType.DURABILITY_DAMAGE
+        );
+
+        assertTrue(result);
+        assertSame(player, capturedPlayer.get());
+        assertSame(sword, capturedItem.get());
+        assertEquals(7, capturedDamage.get());
+        verify(damageEvent).setDamage(4);
     }
 
     private EnchantmentDefinition createTestEnchantment(String name, int minLevel, int maxLevel) {

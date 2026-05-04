@@ -233,8 +233,8 @@ public final class EnchantmentDefinitionBuilder implements EnchantmentDefinition
         }
         if (maxLevel <= 0) {
             errors.add("maxLevel must be > 0, but was: " + maxLevel);
-        } else if (minLevel >= 1 && maxLevel <= minLevel) {
-            errors.add("maxLevel (" + maxLevel + ") must be > minLevel (" + minLevel + ")");
+        } else if (minLevel >= 1 && maxLevel < minLevel) {
+            errors.add("maxLevel (" + maxLevel + ") must be >= minLevel (" + minLevel + ")");
         }
         if (maxLevel > 255) {
             errors.add("maxLevel (" + maxLevel + ") exceeds Minecraft's maximum enchantment level of 255");

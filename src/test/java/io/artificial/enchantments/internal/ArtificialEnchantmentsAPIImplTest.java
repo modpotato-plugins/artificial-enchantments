@@ -1,5 +1,6 @@
 package io.artificial.enchantments.internal;
 
+import be.seeseemelk.mockbukkit.MockBukkit;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,13 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-
 @DisplayName("ArtificialEnchantmentsAPIImpl Tests")
 class ArtificialEnchantmentsAPIImplTest {
 
     @BeforeEach
     void setUp() {
+        MockBukkit.mock();
         ArtificialEnchantmentsAPIImpl.resetForTesting();
         EnchantmentRegistryManager.getInstance().clear();
     }
@@ -32,12 +32,13 @@ class ArtificialEnchantmentsAPIImplTest {
     void tearDown() {
         ArtificialEnchantmentsAPIImpl.resetForTesting();
         EnchantmentRegistryManager.getInstance().clear();
+        MockBukkit.unmock();
     }
 
     @Test
     @DisplayName("Concurrent create returns a single shared instance")
     void concurrentCreateReturnsSingleSharedInstance() throws InterruptedException {
-        Plugin plugin = mock(Plugin.class);
+        Plugin plugin = MockBukkit.createMockPlugin();
         ExecutorService executor = Executors.newFixedThreadPool(8);
         CountDownLatch ready = new CountDownLatch(8);
         CountDownLatch start = new CountDownLatch(1);

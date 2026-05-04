@@ -96,8 +96,8 @@ class EnchantmentDefinitionBuilderValidationTest {
     }
 
     @Test
-    @DisplayName("maxLevel <= minLevel produces validation error")
-    void maxLevelLessThanOrEqualToMinLevelIsInvalid() {
+    @DisplayName("maxLevel < minLevel produces validation error")
+    void maxLevelLessThanMinLevelIsInvalid() {
         builder
             .key(TEST_KEY)
             .displayName(TEST_NAME)
@@ -108,7 +108,23 @@ class EnchantmentDefinitionBuilderValidationTest {
 
         List<String> errors = builder.getValidationErrors();
         assertTrue(errors.stream().anyMatch(e -> e.contains("maxLevel") && e.contains("minLevel")),
-            "Should error about maxLevel > minLevel, but got: " + errors);
+            "Should error about maxLevel >= minLevel, but got: " + errors);
+    }
+
+    @Test
+    @DisplayName("Single-level enchantments are accepted")
+    void singleLevelEnchantmentsAreAccepted() {
+        EnchantmentDefinition definition = builder
+            .key(TEST_KEY)
+            .displayName(TEST_NAME)
+            .scaling(TEST_SCALING)
+            .applicable(Material.DIAMOND_SWORD)
+            .minLevel(1)
+            .maxLevel(1)
+            .build();
+
+        assertEquals(1, definition.getMinLevel());
+        assertEquals(1, definition.getMaxLevel());
     }
 
     @Test
@@ -266,6 +282,22 @@ class EnchantmentDefinitionBuilderValidationTest {
         assertNotNull(definition);
         assertTrue(definition.isCurse());
         assertTrue(definition.isTradeable());
+    }
+
+    @Test
+    @DisplayName("Warnings do not make validate() or isValid() fail")
+    void warningsDoNotInvalidateBuilder() {
+        builder
+            .key(TEST_KEY)
+            .displayName(TEST_NAME)
+            .scaling(TEST_SCALING)
+            .applicable(Material.DIAMOND_SWORD)
+            .curse()
+            .tradeable(true);
+
+        assertTrue(builder.getValidationErrors().stream().anyMatch(e -> e.startsWith("WARNING")));
+        assertTrue(builder.isValid());
+        assertDoesNotThrow(() -> builder.validate());
     }
 
     @Test

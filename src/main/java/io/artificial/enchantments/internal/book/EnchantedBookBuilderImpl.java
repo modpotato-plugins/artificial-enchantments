@@ -150,11 +150,10 @@ public class EnchantedBookBuilderImpl implements EnchantedBook.Builder {
             meta.setLore(lore);
         }
 
+        book.setItemMeta(meta);
         if (treasure) {
             book = itemStorage.setAuxiliaryMetadata(book, "treasure_book", "true");
         }
-
-        book.setItemMeta(meta);
         return book;
     }
 

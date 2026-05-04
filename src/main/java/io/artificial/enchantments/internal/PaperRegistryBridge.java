@@ -139,8 +139,8 @@ public final class PaperRegistryBridge {
     /**
      * Unregisters an enchantment from the internal tracking.
      * 
-     * <p>Note: Native unregistration is not fully supported by Paper once the
-     * registry is frozen. This only removes from internal tracking.
+     * <p>Note: Native unregistration is not supported after Paper's registry
+     * compose window closes. This only removes from internal tracking.
      *
      * @param key the enchantment's namespaced key
      * @return true if unregistered, false if not found

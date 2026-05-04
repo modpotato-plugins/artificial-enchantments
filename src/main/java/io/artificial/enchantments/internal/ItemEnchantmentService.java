@@ -229,7 +229,7 @@ public class ItemEnchantmentService {
      * @param definition the enchantment to register
      * @return the registered definition
      * @throws IllegalArgumentException if already registered or invalid
-     * @throws IllegalStateException if registry is frozen
+     * @throws IllegalStateException if Paper's native registry compose window has closed
      */
     @NotNull
     public EnchantmentDefinition registerEnchantment(@NotNull EnchantmentDefinition definition) {
@@ -243,7 +243,6 @@ public class ItemEnchantmentService {
      *
      * @param key the enchantment's namespaced key
      * @return true if removed, false if not found
-     * @throws IllegalStateException if registry is frozen
      */
     public boolean unregisterEnchantment(@NotNull NamespacedKey key) {
         Objects.requireNonNull(key, "key cannot be null");

@@ -56,7 +56,7 @@ public class ArtificialEnchantmentsAPIImpl implements ArtificialEnchantmentsAPI 
         this.queryFacade = new ItemEnchantmentQueryImpl(itemStorage, registryManager);
         this.lootModifierRegistry = new LootModifierRegistryImpl();
         this.eventBus = new EnchantmentEventBusImpl();
-        this.scheduler = new BukkitFoliaScheduler();
+        this.scheduler = new BukkitFoliaScheduler(plugin);
         this.scalingRegistry = new ScalingAlgorithmRegistryImpl();
         this.version = loadVersion();
     }

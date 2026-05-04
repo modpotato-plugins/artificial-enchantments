@@ -34,7 +34,7 @@ Both paths flow through a single dispatch spine to ensure consistent behavior an
 
 ### 3. Scheduler-Abstraction Design
 
-The library exposes a `FoliaScheduler` abstraction so dependent plugins can centralize how they schedule follow-up work. The current in-tree implementation is `BukkitFoliaScheduler`, so item mutation and heavy work should still be treated conservatively as server-side operations and validated on Folia before production use.
+The library exposes a `FoliaScheduler` abstraction so dependent plugins can centralize how they schedule follow-up work. The in-tree implementation delegates to FoliaLib, so global, location, and entity-scoped tasks use the appropriate scheduler on Bukkit or Folia runtimes.
 
 ## Storage Model
 
@@ -99,8 +99,8 @@ Validation happens at registration time, not application time.
 
 On Paper 1.21+, enchantments are registered with the native registry:
 
-1. PluginBootstrap registers a handler for RegistryEvents.ENCHANTMENT.freeze()
-2. During the freeze event, queued enchantments are registered
+1. PluginBootstrap registers a handler for RegistryEvents.ENCHANTMENT.compose()
+2. During the compose event, queued enchantments are registered
 3. PaperRegistryBridge provides bidirectional lookup between library definitions and native enchantments
 4. Enchantments become visible to clients without lore hacks
 
@@ -185,10 +185,9 @@ scheduler.runAtLocation(Location, Runnable)
 ```
 
 The abstraction:
-- Detects Folia classes at runtime
+- Delegates to FoliaLib for Bukkit/Folia-compatible scheduling
 - Gives dependent plugins one scheduler API to target
-- Uses the in-tree `BukkitFoliaScheduler` implementation today
-- Leaves final region-thread validation to the deploying plugin/server stack
+- Uses global, location, and entity-scoped execution where available
 
 ### Item Operations
 
@@ -214,7 +213,7 @@ public class PaperEnchantmentBootstrap implements PluginBootstrap {
     @Override
     public void bootstrap(BootstrapContext context) {
         context.getLifecycleManager().registerEventHandler(
-            RegistryEvents.ENCHANTMENT.freeze(),
+            RegistryEvents.ENCHANTMENT.compose(),
             event -> {
                 // Register native enchantments here
             }

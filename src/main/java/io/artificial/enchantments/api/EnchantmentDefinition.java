@@ -34,7 +34,7 @@ import java.util.function.Function;
  *     .effectHandler(new MyEffectHandler())
  *     .build();
  * 
- * api.registerEnchantment(myEnchant);
+ * ArtificialEnchantmentsAPI.registerBootstrapEnchantment(myEnchant);
  * }</pre>
  *
  * @see Builder
@@ -82,7 +82,7 @@ public interface EnchantmentDefinition {
     /**
      * Gets the maximum valid level for this enchantment.
      *
-     * @return the maximum level (> minLevel)
+     * @return the maximum level (>= minLevel)
      * @since 0.1.0
      */
     int getMaxLevel();
@@ -272,7 +272,7 @@ public interface EnchantmentDefinition {
         /**
          * Sets the maximum valid level.
          *
-         * @param maxLevel the maximum level (must be > minLevel)
+         * @param maxLevel the maximum level (must be >= minLevel)
          * @return this builder for chaining
          * @since 0.1.0
          */
@@ -443,13 +443,15 @@ public interface EnchantmentDefinition {
          *
          * <p><strong>Default Behavior:</strong> The default implementation
          * calls {@link #getValidationErrors()} and throws an exception if any
-         * errors exist. Override in implementations for custom validation.
+         * non-warning errors exist. Override in implementations for custom validation.
          *
          * @throws IllegalStateException if validation fails, with detailed error message
          * @since 0.2.0
          */
         default void validate() {
-            List<String> errors = getValidationErrors();
+            List<String> errors = getValidationErrors().stream()
+                    .filter(Builder::isCriticalValidationIssue)
+                    .toList();
             if (!errors.isEmpty()) {
                 throw new IllegalStateException(
                     "Enchantment validation failed with " + errors.size() + " error(s):\n  - " +
@@ -466,13 +468,17 @@ public interface EnchantmentDefinition {
          * successfully.
          *
          * <p><strong>Default Behavior:</strong> Returns true if
-         * {@link #getValidationErrors()} returns an empty list.
+         * {@link #getValidationErrors()} returns no non-warning errors.
          *
          * @return true if valid, false if validation errors exist
          * @since 0.2.0
          */
         default boolean isValid() {
-            return getValidationErrors().isEmpty();
+            return getValidationErrors().stream().noneMatch(Builder::isCriticalValidationIssue);
+        }
+
+        private static boolean isCriticalValidationIssue(@NotNull String issue) {
+            return !issue.startsWith("WARNING");
         }
 
         /**
@@ -485,7 +491,7 @@ public interface EnchantmentDefinition {
          * <p>Validation checks include:
          * <ul>
          *   <li>Required fields: key, displayName, scaling, applicable materials</li>
-         *   <li>Level bounds: minLevel >= 1, maxLevel > minLevel</li>
+         *   <li>Level bounds: minLevel >= 1, maxLevel >= minLevel</li>
          *   <li>Material set: non-empty set of applicable materials</li>
          *   <li>Conflicts: no self-conflicts (enchantment cannot conflict with itself)</li>
          *   <li>Cross-property: warnings for curse + tradeable combinations</li>
@@ -494,7 +500,7 @@ public interface EnchantmentDefinition {
          * <p><strong>Default Behavior:</strong> Returns an empty list. Override
          * in implementations to provide actual validation logic.
          *
-         * @return unmodifiable list of validation error messages (empty if valid)
+         * @return unmodifiable list of validation error and warning messages (empty if valid)
          * @since 0.2.0
          */
         @NotNull

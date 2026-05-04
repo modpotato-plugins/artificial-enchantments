@@ -4,12 +4,13 @@ import io.artificial.enchantments.api.EnchantmentDefinition;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import io.papermc.paper.registry.data.EnchantmentRegistryEntry;
-import io.papermc.paper.registry.event.RegistryFreezeEvent;
+import io.papermc.paper.registry.event.RegistryComposeEvent;
 import io.papermc.paper.registry.keys.EnchantmentKeys;
 import io.papermc.paper.registry.set.RegistryKeySet;
 import io.papermc.paper.registry.set.RegistrySet;
 import net.kyori.adventure.key.Key;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,17 +42,18 @@ public final class PaperEnchantmentConverter {
      *
      * @param definition the library enchantment definition
      * @param builder the Paper builder to configure
-     * @param event the registry freeze event for tag lookups
+     * @param event the registry compose event for tag lookups
      */
     public static void convertToBuilder(
             @NotNull EnchantmentDefinition definition,
             @NotNull EnchantmentRegistryEntry.Builder builder,
-            @NotNull RegistryFreezeEvent<Enchantment, EnchantmentRegistryEntry.Builder> event) {
+            @NotNull RegistryComposeEvent<Enchantment, EnchantmentRegistryEntry.Builder> event) {
 
         builder.description(definition.getDisplayName());
         builder.maxLevel(definition.getMaxLevel());
         builder.weight(convertRarityToWeight(definition.getRarity()));
         builder.anvilCost(1 + definition.getMaxLevel() / 2);
+        builder.activeSlots(EquipmentSlotGroup.ANY);
 
         RegistryKeySet<ItemType> supportedItems = determineSupportedItems(definition);
         builder.supportedItems(supportedItems);
@@ -65,10 +67,6 @@ public final class PaperEnchantmentConverter {
                 definition.getMaxLevel(),
                 (int) definition.calculateScaledValue(definition.getMaxLevel())
         ));
-
-        if (definition.isCurse()) {
-            builder.activeSlots(org.bukkit.inventory.EquipmentSlotGroup.ANY);
-        }
 
         if (!definition.getConflictingEnchantments().isEmpty()) {
             Set<TypedKey<Enchantment>> conflictKeys = definition.getConflictingEnchantments()

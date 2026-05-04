@@ -15,18 +15,18 @@ A Paper 1.21+ shared library for creating custom enchantments with native regist
 
 ## Requirements
 
-- Paper 1.21+ (the repository declares Folia support metadata, but you should still validate scheduler behavior on your target server)
+- Paper 1.21+ or a compatible Folia/Paper fork
 - Java 21+
 
 ## Installation
 
 ### For Server Administrators
 
-Download the latest release from [Modrinth](https://modrinth.com/plugin/artificial-enchantments) and install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** — it must be installed as a plugin, not shaded into other plugins.
+Download the latest release from [Modrinth](https://modrinth.com/plugin/artificial-enchantments-api) and install `artificial-enchantments-1.0.2.jar` into your server's `plugins/` folder. This is a **shared plugin library** - it must be installed as a plugin, not shaded into other plugins.
 
 ```bash
 # Download the shaded JAR (includes all required dependencies)
-# Get it from Modrinth: https://modrinth.com/plugin/artificial-enchantments
+# Get it from Modrinth: https://modrinth.com/plugin/artificial-enchantments-api
 
 # Place in plugins folder
 cp artificial-enchantments-1.0.2.jar /path/to/server/plugins/
@@ -99,9 +99,9 @@ dependencies {
 `plugin.yml`:
 
 ```yaml
-depend: [ArtificialEnchantments]
+depend: [artificial-enchantments]
 # or soft-depend if you want graceful degradation:
-# softdepend: [ArtificialEnchantments]
+# softdepend: [artificial-enchantments]
 ```
 
 ## Multi-Plugin Usage
@@ -134,16 +134,20 @@ Both `my-enchants-plugin` and `another-enchants-plugin` call `ArtificialEnchantm
 
 ### Lifecycle Safety
 
-The library initializes on first `create(plugin)` call and persists until the server shuts down. Individual plugins can safely call `create()` in their `onEnable()` — subsequent calls return the existing instance without side effects.
+Paper's native enchantment registry is writable during the registry compose lifecycle, before normal `JavaPlugin#onEnable()` methods run. Register definitions from your Paper `PluginBootstrap` when they need native/client-visible enchantments. `onEnable()` is for retrieving the shared API instance and using item/effect services after bootstrap.
 
 ```java
+public final class MyBootstrap implements PluginBootstrap {
+    @Override
+    public void bootstrap(BootstrapContext context) {
+        ArtificialEnchantmentsAPI.registerBootstrapEnchantment(MyEnchantments.lifeSteal());
+    }
+}
+
 @Override
 public void onEnable() {
     // Safe to call even if another plugin already initialized
     ArtificialEnchantmentsAPI api = ArtificialEnchantmentsAPI.create(this);
-    
-    // Register your enchantments
-    api.registerEnchantment(myEnchantment);
 }
 
 @Override
@@ -177,7 +181,7 @@ public class MyPlugin extends JavaPlugin {
 
 ```java
 EnchantmentDefinition lifeSteal = EnchantmentDefinition.builder()
-    .key(new NamespacedKey(plugin, "life_steal"))
+    .key(new NamespacedKey("myplugin", "life_steal"))
     .displayName(Component.text("Life Steal", NamedTextColor.RED))
     .description(Component.text("Heals you when dealing damage"))
     .minLevel(1)
@@ -188,7 +192,7 @@ EnchantmentDefinition lifeSteal = EnchantmentDefinition.builder()
     .effectHandler(new LifeStealHandler())
     .build();
 
-api.registerEnchantment(lifeSteal);
+ArtificialEnchantmentsAPI.registerBootstrapEnchantment(lifeSteal);
 ```
 
 ### 3. Handle Effects (Typed Callbacks)
@@ -357,7 +361,8 @@ public void onBlockBreak(@NotNull ToolContext context) {
 Main entry point for all operations:
 
 - `create(Plugin)` / `getInstance()` - Get API instance
-- `registerEnchantment(EnchantmentDefinition)` - Register custom enchant
+- `registerBootstrapEnchantment(EnchantmentDefinition)` - Queue native enchant during Paper bootstrap
+- `registerEnchantment(EnchantmentDefinition)` - Register during bootstrap-backed startup
 - `applyEnchantment(ItemStack, EnchantmentDefinition, int)` - Apply to item
 - `removeEnchantment(ItemStack, EnchantmentDefinition)` - Remove from item
 - `getEnchantments(ItemStack)` - Get all enchantments on item

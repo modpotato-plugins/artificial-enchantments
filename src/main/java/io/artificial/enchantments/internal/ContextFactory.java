@@ -202,16 +202,33 @@ public final class ContextFactory {
     ) {
         if (bukkitEvent instanceof PlayerDropItemEvent dropEvent) {
             return new ItemContextImpl(
-                    enchantment, level, scaledValue, dropEvent.getItemDrop().getItemStack(),
-                    slot, true, false
+                    enchantment, level, scaledValue, dropEvent.getPlayer(),
+                    dropEvent.getItemDrop().getItemStack(), slot, true, false,
+                    dropEvent.getItemDrop().getLocation(), 0, dropEvent.isCancelled(), null
             );
         } else if (bukkitEvent instanceof EntityPickupItemEvent pickupEvent) {
             if (pickupEvent.getEntity() instanceof Player player) {
                 return new ItemContextImpl(
-                        enchantment, level, scaledValue, pickupEvent.getItem().getItemStack(),
-                        slot, false, true
+                        enchantment, level, scaledValue, player,
+                        pickupEvent.getItem().getItemStack(), slot, false, true,
+                        pickupEvent.getItem().getLocation(), 0, pickupEvent.isCancelled(), null
                 );
             }
+        } else if (bukkitEvent instanceof PlayerItemDamageEvent damageEvent) {
+            return new ItemContextImpl(
+                    enchantment, level, scaledValue, damageEvent.getPlayer(),
+                    damageEvent.getItem(), slot, false, false,
+                    damageEvent.getPlayer().getLocation(), damageEvent.getDamage(),
+                    damageEvent.isCancelled(), damageEvent
+            );
+        } else if (bukkitEvent instanceof PlayerInteractEvent interactEvent) {
+            return new ItemContextImpl(
+                    enchantment, level, scaledValue, interactEvent.getPlayer(),
+                    interactEvent.getItem() != null ? interactEvent.getItem() : new ItemStack(org.bukkit.Material.AIR),
+                    slot, false, false,
+                    interactEvent.getPlayer().getLocation(), 0,
+                    interactEvent.isCancelled(), null
+            );
         }
         return null;
     }
@@ -1161,6 +1178,8 @@ public final class ContextFactory {
         private final EquipmentSlot slot;
         private final boolean isDrop;
         private final boolean isPickup;
+        private final Location location;
+        private final PlayerItemDamageEvent damageEvent;
         private int currentDurability;
         private int maxDurability;
         private int damageTaken;
@@ -1170,21 +1189,28 @@ public final class ContextFactory {
                 @NotNull EnchantmentDefinition enchantment,
                 int level,
                 double scaledValue,
+                @Nullable Player player,
                 @NotNull ItemStack item,
                 @Nullable EquipmentSlot slot,
                 boolean isDrop,
-                boolean isPickup
+                boolean isPickup,
+                @NotNull Location location,
+                int damageTaken,
+                boolean cancelled,
+                @Nullable PlayerItemDamageEvent damageEvent
         ) {
             super(enchantment, level, scaledValue);
-            this.player = null;
+            this.player = player;
             this.item = item.clone();
             this.slot = slot;
             this.isDrop = isDrop;
             this.isPickup = isPickup;
-            this.currentDurability = item.getType().getMaxDurability() - item.getDurability();
+            this.location = location.clone();
+            this.damageEvent = damageEvent;
             this.maxDurability = item.getType().getMaxDurability();
-            this.damageTaken = 0;
-            this.cancelled = false;
+            this.currentDurability = Math.max(0, this.maxDurability - getItemDamage(item));
+            this.damageTaken = Math.max(0, damageTaken);
+            this.cancelled = cancelled;
         }
 
         @Override
@@ -1208,7 +1234,7 @@ public final class ContextFactory {
         @Override
         @NotNull
         public Location getLocation() {
-            return player != null ? player.getLocation() : new Location(null, 0, 0, 0);
+            return location.clone();
         }
 
         @Override
@@ -1229,11 +1255,14 @@ public final class ContextFactory {
         @Override
         public void setDamageTaken(int damage) {
             this.damageTaken = Math.max(0, damage);
+            if (damageEvent != null) {
+                damageEvent.setDamage(this.damageTaken);
+            }
         }
 
         @Override
         public void reduceDamage(int reduction) {
-            this.damageTaken = Math.max(0, damageTaken - reduction);
+            setDamageTaken(damageTaken - reduction);
         }
 
         @Override
@@ -1269,6 +1298,16 @@ public final class ContextFactory {
         @Override
         public void setCancelled(boolean cancelled) {
             this.cancelled = cancelled;
+            if (damageEvent != null) {
+                damageEvent.setCancelled(cancelled);
+            }
+        }
+
+        private static int getItemDamage(@NotNull ItemStack item) {
+            if (item.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable damageable) {
+                return Math.max(0, damageable.getDamage());
+            }
+            return 0;
         }
     }
 

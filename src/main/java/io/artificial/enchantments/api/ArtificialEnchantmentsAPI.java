@@ -75,17 +75,36 @@ public interface ArtificialEnchantmentsAPI {
     }
 
     /**
+     * Queues an enchantment definition for Paper's native registry bootstrap.
+     *
+     * <p>Paper custom enchantments must be known during the registry compose
+     * lifecycle, before ordinary {@code JavaPlugin#onEnable()} methods run.
+     * Dependent plugins that need client-visible native enchantments should call
+     * this from their own {@code PluginBootstrap#bootstrap(...)} method.
+     *
+     * @param definition the enchantment definition to register natively
+     * @throws IllegalStateException if Paper's native registry compose window has closed
+     * @since 1.0.3
+     */
+    static void registerBootstrapEnchantment(@NotNull EnchantmentDefinition definition) {
+        io.artificial.enchantments.internal.EnchantmentRegistryManager.getInstance().register(definition);
+    }
+
+    /**
      * Registers a new enchantment definition with the library.
      * 
      * <p>The enchantment becomes available for application to items immediately.
-     * On Paper 1.21+, the enchantment is also registered with the native
-     * registry for client visibility.
+     * On Paper 1.21+, native client visibility requires the definition to be
+     * queued during bootstrap via {@link #registerBootstrapEnchantment(EnchantmentDefinition)}.
+     * Calling this after Paper's registry compose event has closed fails fast
+     * because the native registry can no longer accept new enchantments.
      *
      * <p><strong>Thread Safety:</strong> This operation is thread-safe.
      *
      * @param definition the enchantment definition to register (must not be null)
      * @return this API instance for chaining
      * @throws IllegalArgumentException if definition is null or a duplicate key exists
+     * @throws IllegalStateException if Paper's native registry compose window has closed
      * @since 0.1.0
      */
     @NotNull

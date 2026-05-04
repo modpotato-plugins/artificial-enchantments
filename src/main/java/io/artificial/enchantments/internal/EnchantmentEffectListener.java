@@ -1,14 +1,16 @@
 package io.artificial.enchantments.internal;
 
 import io.artificial.enchantments.api.EnchantmentDefinition;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Trident;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -21,8 +23,10 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -73,11 +77,32 @@ public final class EnchantmentEffectListener implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) {
+        if (event.getDamager() instanceof Player player) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
+        }
+
+        if (event.getEntity() instanceof Player victim) {
+            dispatchShieldBlock(victim, event);
+            dispatchArmor(victim, event, EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE);
+        }
+    }
+
+    /**
+     * Handles general entity damage events for armor and shield enchantments.
+     *
+     * @param event the damage event
+     * @since 1.0.0
+     */
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent) {
             return;
         }
-        ItemStack item = player.getInventory().getItemInMainHand();
-        dispatchForItem(item, event, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE_BY_ENTITY);
+        if (event.getEntity() instanceof Player player) {
+            dispatchShieldBlock(player, event);
+            dispatchArmor(player, event, EffectDispatchSpine.DispatchEventType.ENTITY_DAMAGE);
+        }
     }
 
     /**
@@ -125,13 +150,15 @@ public final class EnchantmentEffectListener implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() != org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
-                && event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
         ItemStack item = event.getItem();
         EquipmentSlot hand = event.getHand() != null ? event.getHand() : EquipmentSlot.HAND;
-        dispatchForItem(item, event, hand, EffectDispatchSpine.DispatchEventType.BLOCK_INTERACT);
+        boolean blockInteraction = event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
+                || event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK;
+
+        if (blockInteraction) {
+            dispatchForItem(item, event, hand, EffectDispatchSpine.DispatchEventType.BLOCK_INTERACT);
+        }
+        dispatchForItem(item, event, hand, EffectDispatchSpine.DispatchEventType.ITEM_USED);
     }
 
     /**
@@ -166,6 +193,16 @@ public final class EnchantmentEffectListener implements Listener {
         if (!(event.getEntity().getShooter() instanceof Player player)) {
             return;
         }
+
+        if (event.getEntity() instanceof Trident) {
+            HeldItem trident = findHeldItem(player, Material.TRIDENT);
+            if (trident != null) {
+                dispatchForItem(trident.item(), event, trident.slot(), EffectDispatchSpine.DispatchEventType.PROJECTILE_LAUNCH);
+                dispatchForItem(trident.item(), event, trident.slot(), EffectDispatchSpine.DispatchEventType.TRIDENT_THROW);
+            }
+            return;
+        }
+
         ItemStack item = player.getInventory().getItemInMainHand();
         EquipmentSlot slot = EquipmentSlot.HAND;
         if (item.getType().isAir()) {
@@ -327,5 +364,53 @@ public final class EnchantmentEffectListener implements Listener {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error dispatching enchantment effects for " + eventType, e);
         }
+    }
+
+    private void dispatchArmor(
+            @NotNull Player player,
+            @NotNull org.bukkit.event.Event bukkitEvent,
+            @NotNull EffectDispatchSpine.DispatchEventType eventType
+    ) {
+        PlayerInventory inventory = player.getInventory();
+        dispatchForItem(inventory.getHelmet(), bukkitEvent, EquipmentSlot.HEAD, eventType);
+        dispatchForItem(inventory.getChestplate(), bukkitEvent, EquipmentSlot.CHEST, eventType);
+        dispatchForItem(inventory.getLeggings(), bukkitEvent, EquipmentSlot.LEGS, eventType);
+        dispatchForItem(inventory.getBoots(), bukkitEvent, EquipmentSlot.FEET, eventType);
+    }
+
+    private void dispatchShieldBlock(@NotNull Player player, @NotNull org.bukkit.event.Event bukkitEvent) {
+        if (!player.isBlocking()) {
+            return;
+        }
+
+        PlayerInventory inventory = player.getInventory();
+        ItemStack mainHand = inventory.getItemInMainHand();
+        if (mainHand.getType() == Material.SHIELD) {
+            dispatchForItem(mainHand, bukkitEvent, EquipmentSlot.HAND, EffectDispatchSpine.DispatchEventType.SHIELD_BLOCK);
+        }
+
+        ItemStack offHand = inventory.getItemInOffHand();
+        if (offHand.getType() == Material.SHIELD) {
+            dispatchForItem(offHand, bukkitEvent, EquipmentSlot.OFF_HAND, EffectDispatchSpine.DispatchEventType.SHIELD_BLOCK);
+        }
+    }
+
+    @Nullable
+    private HeldItem findHeldItem(@NotNull Player player, @NotNull Material material) {
+        PlayerInventory inventory = player.getInventory();
+        ItemStack mainHand = inventory.getItemInMainHand();
+        if (mainHand.getType() == material) {
+            return new HeldItem(mainHand, EquipmentSlot.HAND);
+        }
+
+        ItemStack offHand = inventory.getItemInOffHand();
+        if (offHand.getType() == material) {
+            return new HeldItem(offHand, EquipmentSlot.OFF_HAND);
+        }
+
+        return null;
+    }
+
+    private record HeldItem(@NotNull ItemStack item, @NotNull EquipmentSlot slot) {
     }
 }

@@ -4,7 +4,7 @@ Version 1.0.2 | [GitHub](https://github.com/modpotato-plugins/artificial-enchant
 
 This guide covers every public API surface in Artificial Enchantments. It's written for plugin developers who want to build custom enchantments on Paper 1.21+ with the library's shared registry, dispatch, and scheduling abstractions.
 
-All examples assume you have a `plugin` variable (your `JavaPlugin` instance) and an `api` variable (your `ArtificialEnchantmentsAPI` instance).
+Most runtime examples assume you have a `plugin` variable (your `JavaPlugin` instance) and an `api` variable (your `ArtificialEnchantmentsAPI` instance). Native/client-visible enchantment definitions must be queued earlier from a Paper `PluginBootstrap`.
 
 ---
 
@@ -82,9 +82,16 @@ dependencies {
 
 ### Initializing the API
 
-Initialize the API once during `onEnable()`. The library is a shared plugin, so multiple plugins can call `create()` safely. The first call initializes the shared instance. Subsequent calls return that same instance and do not rebind ownership to the newer plugin.
+Queue native enchantment definitions during Paper bootstrap, then initialize or fetch the shared API during `onEnable()`. The library is a shared plugin, so multiple plugins can call `create()` safely. The first call initializes the shared instance. Subsequent calls return that same instance and do not rebind ownership to the newer plugin.
 
 ```java
+public final class MyBootstrap implements PluginBootstrap {
+    @Override
+    public void bootstrap(BootstrapContext context) {
+        ArtificialEnchantmentsAPI.registerBootstrapEnchantment(MyEnchantments.lifeSteal());
+    }
+}
+
 public class MyPlugin extends JavaPlugin {
     private ArtificialEnchantmentsAPI api;
 
@@ -121,7 +128,7 @@ Enchantments are immutable definitions built with the builder pattern. Every enc
 
 ```java
 EnchantmentDefinition lifeSteal = EnchantmentDefinition.builder()
-    .key(new NamespacedKey(plugin, "life_steal"))
+    .key(new NamespacedKey("myplugin", "life_steal"))
     .displayName(Component.text("Life Steal", NamedTextColor.RED))
     .description(Component.text("Heals you when dealing damage"))
     .minLevel(1)
@@ -130,7 +137,7 @@ EnchantmentDefinition lifeSteal = EnchantmentDefinition.builder()
     .applicable(Material.DIAMOND_SWORD, Material.IRON_SWORD, Material.NETHERITE_SWORD)
     .build();
 
-api.registerEnchantment(lifeSteal);
+ArtificialEnchantmentsAPI.registerBootstrapEnchantment(lifeSteal);
 ```
 
 ### Builder Options
@@ -958,7 +965,8 @@ public void onDisable() {
 |--------|-------------|
 | `create(Plugin)` | Initialize and bind to plugin |
 | `getInstance()` | Get shared instance |
-| `registerEnchantment(EnchantmentDefinition)` | Register custom enchantment |
+| `registerBootstrapEnchantment(EnchantmentDefinition)` | Queue native enchantment during Paper bootstrap |
+| `registerEnchantment(EnchantmentDefinition)` | Register during bootstrap-backed startup |
 | `unregisterEnchantment(NamespacedKey)` | Remove from registry |
 | `getEnchantment(NamespacedKey)` | Lookup by key |
 | `getAllEnchantments()` | List all registered |

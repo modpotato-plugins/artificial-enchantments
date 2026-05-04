@@ -299,7 +299,7 @@ jobs:
 
             ### Modrinth
 
-            Also available on [Modrinth](https://modrinth.com/project/3r7G1rGR).
+            Also available on [Modrinth](https://modrinth.com/plugin/artificial-enchantments-api).
           draft: ${{ github.event.inputs.draft_release }}
           files: |
             build/libs/artificial-enchantments-*.jar
@@ -327,5 +327,3 @@ jobs:
             purpur
           game-versions: |
             1.21.x
-            1.20.x
-            26.1.x

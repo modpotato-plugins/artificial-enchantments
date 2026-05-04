@@ -1,27 +1,33 @@
 package io.artificial.enchantments.internal;
 
+import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.impl.PlatformScheduler;
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
 /**
- * Bukkit implementation of {@link FoliaScheduler}.
+ * FoliaLib-backed implementation of {@link FoliaScheduler}.
  *
- * <p>Wraps the standard Bukkit scheduler to provide the FoliaScheduler
- * abstraction. On traditional single-threaded Bukkit servers, all tasks
- * run on the main server thread regardless of location or entity.
+ * <p>On Folia this delegates to region/entity/global schedulers through
+ * FoliaLib. On Paper/Purpur it resolves to the normal main-thread scheduler.
  */
 public final class BukkitFoliaScheduler implements FoliaScheduler {
 
+    private final FoliaLib foliaLib;
+
     /**
      * Creates a new Bukkit folia scheduler.
+     *
+     * @param plugin the owning plugin
      */
-    public BukkitFoliaScheduler() {
+    public BukkitFoliaScheduler(@NotNull Plugin plugin) {
+        this.foliaLib = new FoliaLib(plugin);
     }
 
     /**
@@ -29,7 +35,7 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public void runGlobal(@NotNull Plugin plugin, @NotNull Runnable task) {
-        Bukkit.getScheduler().runTask(plugin, task);
+        scheduler().runNextTick(ignored -> task.run());
     }
 
     /**
@@ -37,7 +43,7 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public void runAtLocation(@NotNull Plugin plugin, @NotNull Location location, @NotNull Runnable task) {
-        Bukkit.getScheduler().runTask(plugin, task);
+        scheduler().runAtLocation(location, ignored -> task.run());
     }
 
     /**
@@ -45,7 +51,7 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public void runAtEntity(@NotNull Plugin plugin, @NotNull Entity entity, @NotNull Runnable task) {
-        Bukkit.getScheduler().runTask(plugin, task);
+        scheduler().runAtEntity(entity, ignored -> task.run());
     }
 
     /**
@@ -53,8 +59,7 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public @NotNull ScheduledTask runGlobalDelayed(@NotNull Plugin plugin, @NotNull Runnable task, long delayTicks) {
-        BukkitTask bukkitTask = Bukkit.getScheduler().runTaskLater(plugin, task, delayTicks);
-        return new BukkitScheduledTask(bukkitTask);
+        return new WrappedScheduledTask(scheduler().runLater(task, delayTicks));
     }
 
     /**
@@ -62,14 +67,14 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public @NotNull ScheduledTask runGlobalTimer(@NotNull Plugin plugin, @NotNull Consumer<ScheduledTask> task, long delayTicks, long periodTicks) {
-        ScheduledTask[] wrapper = new ScheduledTask[1];
-        BukkitTask bukkitTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (wrapper[0] != null) {
-                task.accept(wrapper[0]);
+        final WrappedScheduledTask[] handle = new WrappedScheduledTask[1];
+        WrappedTask wrappedTask = scheduler().runTimer(() -> {
+            if (handle[0] != null) {
+                task.accept(handle[0]);
             }
         }, delayTicks, periodTicks);
-        wrapper[0] = new BukkitScheduledTask(bukkitTask);
-        return wrapper[0];
+        handle[0] = new WrappedScheduledTask(wrappedTask);
+        return handle[0];
     }
 
     /**
@@ -77,25 +82,29 @@ public final class BukkitFoliaScheduler implements FoliaScheduler {
      */
     @Override
     public boolean isPrimaryThread() {
-        return Bukkit.isPrimaryThread();
+        return Bukkit.isPrimaryThread() || scheduler().isGlobalTickThread();
     }
 
-    private record BukkitScheduledTask(BukkitTask bukkitTask) implements ScheduledTask {
+    @NotNull
+    private PlatformScheduler scheduler() {
+        return foliaLib.getScheduler();
+    }
+
+    private record WrappedScheduledTask(WrappedTask task) implements ScheduledTask {
 
         @Override
         public void cancel() {
-            bukkitTask.cancel();
+            task.cancel();
         }
 
         @Override
         public boolean isCancelled() {
-            return !Bukkit.getScheduler().isCurrentlyRunning(bukkitTask.getTaskId())
-                    && !Bukkit.getScheduler().isQueued(bukkitTask.getTaskId());
+            return task.isCancelled();
         }
 
         @Override
         public @NotNull Plugin getOwningPlugin() {
-            return bukkitTask.getOwner();
+            return task.getOwningPlugin();
         }
     }
 }

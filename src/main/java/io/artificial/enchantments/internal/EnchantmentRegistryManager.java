@@ -42,17 +42,19 @@ public final class EnchantmentRegistryManager {
     // Index: material -> applicable enchantments (for fast lookup)
     private final Map<org.bukkit.Material, Set<EnchantmentDefinition>> materialIndex;
 
-    // Pending registrations awaiting native registry freeze
+    // Pending registrations awaiting native registry compose
     private final Set<NamespacedKey> pendingNativeRegistration;
 
     // Track which enchantments have been registered to native registry
     private final Set<NamespacedKey> nativeRegistered;
+    private volatile boolean nativeRegistrationClosed;
 
     private EnchantmentRegistryManager() {
         this.definitions = new ConcurrentHashMap<>();
         this.materialIndex = new ConcurrentHashMap<>();
         this.pendingNativeRegistration = ConcurrentHashMap.newKeySet();
         this.nativeRegistered = ConcurrentHashMap.newKeySet();
+        this.nativeRegistrationClosed = false;
     }
 
     /**
@@ -79,6 +81,13 @@ public final class EnchantmentRegistryManager {
      * @return true if the enchantment was newly registered, false if it already existed
      */
     public boolean register(@NotNull EnchantmentDefinition definition) {
+        if (nativeRegistrationClosed) {
+            throw new IllegalStateException(
+                    "Native enchantment registration is already closed. Register custom enchantments from a Paper PluginBootstrap "
+                            + "using ArtificialEnchantmentsAPI.registerBootstrapEnchantment(...)."
+            );
+        }
+
         NamespacedKey key = definition.getKey();
 
         EnchantmentDefinition existing = definitions.putIfAbsent(key, definition);
@@ -170,7 +179,7 @@ public final class EnchantmentRegistryManager {
 
     /**
      * Returns all enchantments pending native registration.
-     * Called during bootstrap freeze event.
+     * Called during the bootstrap registry compose event.
      *
      * @return collection of enchantment definitions awaiting native registration
      */
@@ -218,6 +227,22 @@ public final class EnchantmentRegistryManager {
     }
 
     /**
+     * Marks the native registry composition window as closed.
+     */
+    public void markNativeRegistrationClosed() {
+        this.nativeRegistrationClosed = true;
+    }
+
+    /**
+     * Checks whether native enchantment registration is closed.
+     *
+     * @return true once the Paper enchantment registry compose event has run
+     */
+    public boolean isNativeRegistrationClosed() {
+        return nativeRegistrationClosed;
+    }
+
+    /**
      * Clears all registrations. Used primarily for testing.
      */
     public void clear() {
@@ -225,5 +250,6 @@ public final class EnchantmentRegistryManager {
         materialIndex.clear();
         pendingNativeRegistration.clear();
         nativeRegistered.clear();
+        nativeRegistrationClosed = false;
     }
 }

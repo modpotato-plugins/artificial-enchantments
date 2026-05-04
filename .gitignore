@@ -1,5 +1,6 @@
 # Gradle
 .gradle/
+.gradle-home/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -66,6 +67,7 @@ hs_err_pid*
 
 # Sisyphus state (local only)
 .sisyphus/
+.tmp/
 
 # Build output (but keep build/libs for releases if needed locally)
 # Actually, exclude all build output

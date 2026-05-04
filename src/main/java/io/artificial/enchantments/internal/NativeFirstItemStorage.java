@@ -4,8 +4,10 @@ import io.artificial.enchantments.api.EnchantmentDefinition;
 import io.artificial.enchantments.api.ItemStorage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -38,6 +41,7 @@ public class NativeFirstItemStorage implements ItemStorage {
 
     private final Supplier<EnchantmentRegistryManager> registrySupplier;
     private final NbtMetadataStorage nbtStorage;
+    private final Function<NamespacedKey, Enchantment> nativeResolver;
 
     private static final String ENCHANTMENT_PREFIX = "ae_enchant_";
 
@@ -51,8 +55,16 @@ public class NativeFirstItemStorage implements ItemStorage {
     public NativeFirstItemStorage(
             @NotNull Supplier<EnchantmentRegistryManager> registrySupplier,
             @NotNull NbtMetadataStorage nbtStorage) {
+        this(registrySupplier, nbtStorage, NativeFirstItemStorage::lookupNativeEnchantment);
+    }
+
+    NativeFirstItemStorage(
+            @NotNull Supplier<EnchantmentRegistryManager> registrySupplier,
+            @NotNull NbtMetadataStorage nbtStorage,
+            @NotNull Function<NamespacedKey, Enchantment> nativeResolver) {
         this.registrySupplier = Objects.requireNonNull(registrySupplier, "registrySupplier cannot be null");
         this.nbtStorage = Objects.requireNonNull(nbtStorage, "nbtStorage cannot be null");
+        this.nativeResolver = Objects.requireNonNull(nativeResolver, "nativeResolver cannot be null");
     }
 
     @Override
@@ -71,7 +83,7 @@ public class NativeFirstItemStorage implements ItemStorage {
             );
         }
 
-        if (!enchantment.isApplicableTo(item)) {
+        if (item.getType() != Material.ENCHANTED_BOOK && !enchantment.isApplicableTo(item)) {
             throw new IllegalArgumentException(
                     "Enchantment " + enchantment.getKey() + " is not applicable to " + item.getType()
             );
@@ -90,7 +102,7 @@ public class NativeFirstItemStorage implements ItemStorage {
             );
         }
 
-        meta.addEnchant(nativeEnchant, level, true);
+        addNativeEnchantment(meta, nativeEnchant, level);
         result.setItemMeta(meta);
 
         return result;
@@ -127,8 +139,8 @@ public class NativeFirstItemStorage implements ItemStorage {
         }
 
         Enchantment nativeEnchant = resolveNativeEnchantment(enchantment.getKey());
-        if (nativeEnchant != null && meta.hasEnchant(nativeEnchant)) {
-            meta.removeEnchant(nativeEnchant);
+        if (nativeEnchant != null && hasNativeEnchantment(meta, nativeEnchant)) {
+            removeNativeEnchantment(meta, nativeEnchant);
             result.setItemMeta(meta);
         }
 
@@ -168,8 +180,8 @@ public class NativeFirstItemStorage implements ItemStorage {
         if (registry != null) {
             for (EnchantmentDefinition definition : registry.getAll()) {
                 Enchantment nativeEnchant = resolveNativeEnchantment(definition.getKey());
-                if (nativeEnchant != null && meta.hasEnchant(nativeEnchant)) {
-                    meta.removeEnchant(nativeEnchant);
+                if (nativeEnchant != null && hasNativeEnchantment(meta, nativeEnchant)) {
+                    removeNativeEnchantment(meta, nativeEnchant);
                 }
             }
         }
@@ -193,7 +205,7 @@ public class NativeFirstItemStorage implements ItemStorage {
             return 0;
         }
 
-        return meta.getEnchantLevel(nativeEnchant);
+        return getNativeEnchantmentLevel(meta, nativeEnchant);
     }
 
     @Override
@@ -214,12 +226,12 @@ public class NativeFirstItemStorage implements ItemStorage {
             return 0;
         }
 
-        Enchantment nativeEnchant = Enchantment.getByKey(key);
+        Enchantment nativeEnchant = resolveNativeEnchantment(key);
         if (nativeEnchant == null) {
             return 0;
         }
 
-        return meta.getEnchantLevel(nativeEnchant);
+        return getNativeEnchantmentLevel(meta, nativeEnchant);
     }
 
     @Override
@@ -241,8 +253,8 @@ public class NativeFirstItemStorage implements ItemStorage {
 
         for (EnchantmentDefinition definition : registry.getAll()) {
             Enchantment nativeEnchant = resolveNativeEnchantment(definition.getKey());
-            if (nativeEnchant != null && meta.hasEnchant(nativeEnchant)) {
-                int level = meta.getEnchantLevel(nativeEnchant);
+            if (nativeEnchant != null && hasNativeEnchantment(meta, nativeEnchant)) {
+                int level = getNativeEnchantmentLevel(meta, nativeEnchant);
                 if (level > 0) {
                     result.put(definition, level);
                 }
@@ -315,7 +327,46 @@ public class NativeFirstItemStorage implements ItemStorage {
 
     @Nullable
     private Enchantment resolveNativeEnchantment(@NotNull NamespacedKey key) {
-        return Enchantment.getByKey(key);
+        return nativeResolver.apply(key);
+    }
+
+    @Nullable
+    private static Enchantment lookupNativeEnchantment(@NotNull NamespacedKey key) {
+        try {
+            return Registry.ENCHANTMENT.get(key);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void addNativeEnchantment(@NotNull ItemMeta meta, @NotNull Enchantment enchantment, int level) {
+        if (meta instanceof EnchantmentStorageMeta storageMeta) {
+            storageMeta.addStoredEnchant(enchantment, level, true);
+        } else {
+            meta.addEnchant(enchantment, level, true);
+        }
+    }
+
+    private boolean hasNativeEnchantment(@NotNull ItemMeta meta, @NotNull Enchantment enchantment) {
+        if (meta instanceof EnchantmentStorageMeta storageMeta) {
+            return storageMeta.hasStoredEnchant(enchantment);
+        }
+        return meta.hasEnchant(enchantment);
+    }
+
+    private int getNativeEnchantmentLevel(@NotNull ItemMeta meta, @NotNull Enchantment enchantment) {
+        if (meta instanceof EnchantmentStorageMeta storageMeta) {
+            return storageMeta.getStoredEnchantLevel(enchantment);
+        }
+        return meta.getEnchantLevel(enchantment);
+    }
+
+    private void removeNativeEnchantment(@NotNull ItemMeta meta, @NotNull Enchantment enchantment) {
+        if (meta instanceof EnchantmentStorageMeta storageMeta) {
+            storageMeta.removeStoredEnchant(enchantment);
+        } else {
+            meta.removeEnchant(enchantment);
+        }
     }
 
     @NotNull
@@ -326,9 +377,9 @@ public class NativeFirstItemStorage implements ItemStorage {
             return result;
         }
 
-        Enchantment nativeEnchant = Enchantment.getByKey(key);
-        if (nativeEnchant != null && meta.hasEnchant(nativeEnchant)) {
-            meta.removeEnchant(nativeEnchant);
+        Enchantment nativeEnchant = resolveNativeEnchantment(key);
+        if (nativeEnchant != null && hasNativeEnchantment(meta, nativeEnchant)) {
+            removeNativeEnchantment(meta, nativeEnchant);
             result.setItemMeta(meta);
         }
 
